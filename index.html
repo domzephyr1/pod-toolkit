@@ -865,6 +865,43 @@ input[type="range"]{
 .toast.success{ border-color:var(--green); }
 .toast.error{ border-color:var(--red); }
 .toast-icon{ font-size:16px; }
+  /* --- TREND HIJACKER MODAL --- */
+  .modal-backdrop {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(4,6,10,0.8); backdrop-filter: blur(8px);
+    z-index: 1000; display: none; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.3s ease;
+  }
+  .modal-backdrop.show { opacity: 1; display: flex; }
+  .modal-content {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; width: 480px; max-width: 90%;
+    padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative; overflow: hidden;
+  }
+  .modal-backdrop.show .modal-content { transform: translateY(0); }
+  .modal-content::before {
+    content:''; position:absolute; top:0; left:0; width:100%; height:4px;
+    background: var(--gradient-primary);
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-title { font-size: 20px; font-weight: 700; color: #fff; display:flex; align-items:center; gap:8px;}
+  .close-modal { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
+  .close-modal:hover { color: #fff; }
+  .trend-select {
+    width: 100%; padding: 12px; margin-bottom: 16px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: 8px; color: #fff; font-family: inherit; font-size: 14px;
+  }
+  .trend-select:focus { border-color: var(--primary); outline: none; }
+  .trend-links { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  .trend-link {
+    font-size: 12px; color: var(--primary); text-decoration: none;
+    padding: 6px 10px; background: rgba(99,102,241,0.1); border-radius: 4px;
+    transition: 0.2s; display:flex; align-items:center; gap:4px;
+  }
+  .trend-link:hover { background: rgba(99,102,241,0.2); }
 </style>
 </head>
 <body>
@@ -888,7 +925,10 @@ input[type="range"]{
 
   <!-- LEFT PANEL: Template Builder -->
   <div class="panel" id="panelTemplates">
-    <div class="panel-header">📝 Template Builder</div>
+    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <span>📝 Template Builder</span>
+      <button class="btn-accent btn-small" id="openTrendHijackerBtn" style="padding: 4px 10px; font-size: 12px; background:var(--gradient-primary); border:none;">🔥 Trend Hijacker</button>
+    </div>
 
     <div class="chips" id="templateChips"></div>
 
@@ -2344,7 +2384,125 @@ input[type="range"]{
   // Fallback: generate after 2s even if fonts haven't loaded
   setTimeout(doInitialGenerate, 2000);
 
+  // --- TREND HIJACKER LOGIC ---
+  const trendModal = document.getElementById('trendModal');
+  const openTrendHijackerBtn = document.getElementById('openTrendHijackerBtn');
+  const closeTrendModal = document.getElementById('closeTrendModal');
+  const trendNicheSelect = document.getElementById('trendNicheSelect');
+  const trendFormatSelect = document.getElementById('trendFormatSelect');
+  const applyTrendsBtn = document.getElementById('applyTrendsBtn');
+
+  openTrendHijackerBtn.addEventListener('click', () => {
+    trendModal.classList.add('show');
+  });
+
+  closeTrendModal.addEventListener('click', () => {
+    trendModal.classList.remove('show');
+  });
+
+  trendModal.addEventListener('click', (e) => {
+    if(e.target === trendModal) trendModal.classList.remove('show');
+  });
+
+  const trendData = {
+    niches: {
+      teachers: ["Teacher", "Kindergarten Teacher", "Math Teacher", "Special Ed Teacher", "Principal", "Educator"],
+      nurses: ["Nurse", "ER Nurse", "NICU Nurse", "Nursing Student", "Registered Nurse", "Scrub Tech"],
+      gym: ["Gym Rat", "Weightlifter", "Bodybuilder", "Cardio Queen", "Powerlifter", "Fitness Coach"],
+      introverts: ["Introvert", "Homebody", "Overthinker", "Nap Enthusiast", "Anti-Social Club", "Quiet Person"],
+      pets: ["Dog Mom", "Cat Dad", "Plant Parent", "Rescue Mom", "Golden Retriever Dad", "Corgi Lover"],
+      tech: ["Software Engineer", "Web Developer", "Programmer", "Sysadmin", "UX Designer", "Tech Bro"]
+    },
+    formats: {
+      era: "In my {niche} Era",
+      okayest: "World's Okayest {niche}",
+      coffee: "I run on coffee and {niche} things",
+      powered: "Powered by iced coffee and {niche} chaos",
+      justa: "Just a {niche} trying to survive"
+    }
+  };
+
+  applyTrendsBtn.addEventListener('click', () => {
+    let selectedNicheKey = trendNicheSelect.value;
+    let selectedFormatKey = trendFormatSelect.value;
+
+    let nicheKeys = Object.keys(trendData.niches);
+    if(selectedNicheKey === 'random') {
+      selectedNicheKey = nicheKeys[Math.floor(Math.random() * nicheKeys.length)];
+    }
+
+    let formatKeys = Object.keys(trendData.formats);
+    let formatTpl = "";
+    if(selectedFormatKey === 'random') {
+      selectedFormatKey = formatKeys[Math.floor(Math.random() * formatKeys.length)];
+    }
+    formatTpl = trendData.formats[selectedFormatKey];
+
+    // Get the keywords for the selected niche
+    let keywords = [...trendData.niches[selectedNicheKey]];
+    // If random, mix in some other random ones for fun
+    if(trendNicheSelect.value === 'random') {
+      let anotherKey = nicheKeys[Math.floor(Math.random() * nicheKeys.length)];
+      keywords = keywords.concat(trendData.niches[anotherKey]);
+    }
+
+    // Shuffle and pick 10 max
+    keywords = keywords.sort(() => 0.5 - Math.random()).slice(0, 10);
+
+    // Update UI
+    document.getElementById('templateInput').value = formatTpl;
+    document.getElementById('bulkValues').value = keywords.join('\n');
+    
+    // Close modal and generate
+    trendModal.classList.remove('show');
+    generateDesigns();
+  });
+
 })();
 </script>
+<!-- TREND HIJACKER MODAL -->
+<div class="modal-backdrop" id="trendModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">🔥 Trend Hijacker Engine</div>
+      <button class="close-modal" id="closeTrendModal">&times;</button>
+    </div>
+    <div style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5;">
+      Instantly generate highly-profitable, ready-to-sell t-shirt designs based on evergreen POD trends and niches.
+    </div>
+
+    <label class="field-label">1. Choose a Niche (or Surprise Me)</label>
+    <select class="trend-select" id="trendNicheSelect">
+      <option value="random">🎲 Surprise Me (Random Niches)</option>
+      <option value="teachers">🍎 Teachers & Educators</option>
+      <option value="nurses">💉 Nurses & Medical</option>
+      <option value="gym">🏋️ Gym & Fitness</option>
+      <option value="introverts">🛋️ Introverts & Sarcasm</option>
+      <option value="pets">🐶 Pet Parents</option>
+      <option value="tech">💻 Tech & Coding</option>
+    </select>
+
+    <label class="field-label">2. Choose a Meme Format</label>
+    <select class="trend-select" id="trendFormatSelect">
+      <option value="random">🎲 Random Mashup</option>
+      <option value="era">In my {niche} Era</option>
+      <option value="okayest">World's Okayest {niche}</option>
+      <option value="coffee">I run on Coffee and {niche} things</option>
+      <option value="powered">Powered by iced coffee and {niche} chaos</option>
+      <option value="justa">Just a {niche} trying to survive</option>
+    </select>
+
+    <button class="btn-primary" id="applyTrendsBtn" style="width:100%; font-size:16px; margin-top:10px;">
+      ⚡ Hijack Trends & Apply
+    </button>
+
+    <div class="trend-links">
+      <span style="font-size:12px; color:var(--text-muted); width:100%; margin-bottom:4px;">Live Research Links:</span>
+      <a href="https://trends.google.com/trends/explore?geo=US&q=shirt" target="_blank" class="trend-link">📈 Google Trends</a>
+      <a href="https://trends.pinterest.com/" target="_blank" class="trend-link">📌 Pinterest Trends</a>
+      <a href="https://www.etsy.com/search?q=funny%20tshirt" target="_blank" class="trend-link">🛍️ Etsy Popular</a>
+    </div>
+  </div>
+</div>
 </body>
 </html>
