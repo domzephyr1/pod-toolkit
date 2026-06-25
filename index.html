@@ -1091,6 +1091,50 @@ input[type="range"]{
 
 <div id="renderRoot" style="position:fixed; top:-99999px; left:-99999px;"></div>
 
+<!-- TREND HIJACKER MODAL -->
+<div class="modal-backdrop" id="trendModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">🔥 Trend Hijacker Engine</div>
+      <button class="close-modal" id="closeTrendModal">&times;</button>
+    </div>
+    <div style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5;">
+      Instantly generate highly-profitable, ready-to-sell t-shirt designs based on evergreen POD trends and niches.
+    </div>
+
+    <label class="field-label">1. Choose a Niche (or Surprise Me)</label>
+    <select class="trend-select" id="trendNicheSelect">
+      <option value="random">🎲 Surprise Me (Random Niches)</option>
+      <option value="teachers">🍎 Teachers & Educators</option>
+      <option value="nurses">💉 Nurses & Medical</option>
+      <option value="gym">🏋️ Gym & Fitness</option>
+      <option value="introverts">🛋️ Introverts & Sarcasm</option>
+      <option value="pets">🐶 Pet Parents</option>
+      <option value="tech">💻 Tech & Coding</option>
+    </select>
+
+    <label class="field-label">2. Choose a Meme Format</label>
+    <select class="trend-select" id="trendFormatSelect">
+      <option value="random">🎲 Random Mashup</option>
+      <option value="era">In my {niche} Era</option>
+      <option value="okayest">World's Okayest {niche}</option>
+      <option value="coffee">I run on Coffee and {niche} things</option>
+      <option value="powered">Powered by iced coffee and {niche} chaos</option>
+      <option value="justa">Just a {niche} trying to survive</option>
+    </select>
+
+    <button class="btn-primary" id="applyTrendsBtn" style="width:100%; font-size:16px; margin-top:10px;">
+      ⚡ Hijack Trends & Apply
+    </button>
+
+    <div class="trend-links">
+      <span style="font-size:12px; color:var(--text-muted); width:100%; margin-bottom:4px;">Live Research Links:</span>
+      <a href="https://trends.google.com/trends/explore?geo=US&q=shirt" target="_blank" class="trend-link">📈 Google Trends</a>
+      <a href="https://trends.pinterest.com/" target="_blank" class="trend-link">📌 Pinterest Trends</a>
+      <a href="https://www.etsy.com/search?q=funny%20tshirt" target="_blank" class="trend-link">🛍️ Etsy Popular</a>
+    </div>
+  </div>
+</div>
 <script>
 (function(){
 
@@ -2523,49 +2567,5 @@ input[type="range"]{
 
 })();
 </script>
-<!-- TREND HIJACKER MODAL -->
-<div class="modal-backdrop" id="trendModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title">🔥 Trend Hijacker Engine</div>
-      <button class="close-modal" id="closeTrendModal">&times;</button>
-    </div>
-    <div style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5;">
-      Instantly generate highly-profitable, ready-to-sell t-shirt designs based on evergreen POD trends and niches.
-    </div>
-
-    <label class="field-label">1. Choose a Niche (or Surprise Me)</label>
-    <select class="trend-select" id="trendNicheSelect">
-      <option value="random">🎲 Surprise Me (Random Niches)</option>
-      <option value="teachers">🍎 Teachers & Educators</option>
-      <option value="nurses">💉 Nurses & Medical</option>
-      <option value="gym">🏋️ Gym & Fitness</option>
-      <option value="introverts">🛋️ Introverts & Sarcasm</option>
-      <option value="pets">🐶 Pet Parents</option>
-      <option value="tech">💻 Tech & Coding</option>
-    </select>
-
-    <label class="field-label">2. Choose a Meme Format</label>
-    <select class="trend-select" id="trendFormatSelect">
-      <option value="random">🎲 Random Mashup</option>
-      <option value="era">In my {niche} Era</option>
-      <option value="okayest">World's Okayest {niche}</option>
-      <option value="coffee">I run on Coffee and {niche} things</option>
-      <option value="powered">Powered by iced coffee and {niche} chaos</option>
-      <option value="justa">Just a {niche} trying to survive</option>
-    </select>
-
-    <button class="btn-primary" id="applyTrendsBtn" style="width:100%; font-size:16px; margin-top:10px;">
-      ⚡ Hijack Trends & Apply
-    </button>
-
-    <div class="trend-links">
-      <span style="font-size:12px; color:var(--text-muted); width:100%; margin-bottom:4px;">Live Research Links:</span>
-      <a href="https://trends.google.com/trends/explore?geo=US&q=shirt" target="_blank" class="trend-link">📈 Google Trends</a>
-      <a href="https://trends.pinterest.com/" target="_blank" class="trend-link">📌 Pinterest Trends</a>
-      <a href="https://www.etsy.com/search?q=funny%20tshirt" target="_blank" class="trend-link">🛍️ Etsy Popular</a>
-    </div>
-  </div>
-</div>
 </body>
 </html>
