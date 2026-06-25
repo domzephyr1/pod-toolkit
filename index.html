@@ -917,6 +917,9 @@ input[type="range"]{
     </div>
     <div class="topbar-actions">
       <button class="btn-ghost btn-small" id="clearAllBtn" title="Clear all designs">Clear All</button>
+      <button class="btn-accent" id="uploadPrintfulBtn" style="width:auto; padding:7px 14px; background: #E52E2E; color:white; border:none; box-shadow:none;">
+        ☁️ Upload to Printful
+      </button>
       <button class="btn-primary" id="downloadAllBtn" style="width:auto; padding:7px 14px;">
         ⬇ Download All (ZIP)
       </button>
@@ -2270,6 +2273,19 @@ input[type="range"]{
     return wrap;
   }
 
+  async function renderToBase64(d){
+    if(typeof html2canvas !== 'function'){
+      throw new Error('html2canvas not loaded');
+    }
+    const wrap = renderFullResCanvas(d);
+    await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r => requestAnimationFrame(r));
+    const canvasEl = await html2canvas(wrap, {
+      width: CANVAS_W, height: CANVAS_H, backgroundColor: null, scale: 1, useCORS: true
+    });
+    return canvasEl.toDataURL('image/png');
+  }
+
   async function renderToBlob(d){
     if(typeof html2canvas !== 'function'){
       showToast('html2canvas failed to load. Check your internet connection.', 'error');
@@ -2336,6 +2352,53 @@ input[type="range"]{
       showToast(`Downloaded ZIP with ${designs.length} designs`);
     } catch(err){
       showToast('Export failed: ' + err.message, 'error');
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      btn.classList.remove('generating-pulse');
+    }
+  });
+
+  // ======================================================================
+  //  UPLOAD TO PRINTFUL
+  // ======================================================================
+  document.getElementById('uploadPrintfulBtn').addEventListener('click', async () => {
+    if(designs.length === 0){
+      showToast('No designs to upload', 'error');
+      return;
+    }
+    const btn = document.getElementById('uploadPrintfulBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '☁️ Uploading…';
+    btn.disabled = true;
+    btn.classList.add('generating-pulse');
+
+    let successCount = 0;
+    try {
+      for(let i = 0; i < designs.length; i++){
+        const d = designs[i];
+        btn.innerHTML = `☁️ ${i+1}/${designs.length}…`;
+        const base64Data = await renderToBase64(d);
+        
+        const res = await fetch('/api/upload-printful', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            base64Image: base64Data,
+            filename: filenameFor(d)
+          })
+        });
+        
+        const data = await res.json();
+        if(!res.ok) {
+          console.error("Printful Error", data);
+          throw new Error(data.error || 'Upload failed');
+        }
+        successCount++;
+      }
+      showToast(`Successfully uploaded ${successCount} designs to Printful!`, 'success');
+    } catch(err){
+      showToast('Upload failed: ' + err.message, 'error');
     } finally {
       btn.innerHTML = originalText;
       btn.disabled = false;
