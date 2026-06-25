@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POD Design Generator</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Bungee&family=Playfair+Display:wght@700;900&family=DM+Serif+Display&family=Abril+Fatface&family=Fraunces:wght@700;900&family=Space+Grotesk:wght@400;500;600;700&family=Caveat:wght@700&family=Permanent+Marker&family=Shrikhand&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+  :root{
+    --ink:#0A0A0A;
+    --terracotta:#C5573A;
+    --border:#E5E5E5;
+    --hover:#F5F5F5;
+    --grey-text:#8A8A8A;
+    --bg:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Space Grotesk', sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    font-size:14px;
+    line-height:1.5;
+  }
+  h1,h2,h3{margin:0;font-weight:600;}
+
+  .app{
+    display:grid;
+    grid-template-columns: 360px 320px 1fr;
+    height:100vh;
+  }
+  @media (max-width: 1100px){
+    .app{ grid-template-columns: 1fr; height:auto; }
+  }
+
+  .panel{
+    border-right:1px solid var(--border);
+    padding:24px;
+    overflow-y:auto;
+  }
+  .panel:last-child{ border-right:none; }
+
+  .panel-header{
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--grey-text);
+    margin-bottom:16px;
+    font-weight:600;
+  }
+
+  label.field-label{
+    display:block;
+    font-size:12px;
+    color:var(--grey-text);
+    margin-bottom:6px;
+    margin-top:18px;
+    font-weight:500;
+  }
+  label.field-label:first-of-type{ margin-top:0; }
+
+  input[type="text"], textarea, select{
+    width:100%;
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:9px 10px;
+    font-family:inherit;
+    font-size:13px;
+    color:var(--ink);
+    background:#fff;
+    outline:none;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus{
+    border-color:var(--ink);
+  }
+  textarea{
+    resize:vertical;
+    min-height:120px;
+    line-height:1.6;
+    font-family: ui-monospace, monospace;
+    font-size:12.5px;
+  }
+
+  .hint{
+    font-size:11px;
+    color:var(--grey-text);
+    margin-top:6px;
+  }
+
+  button{
+    font-family:inherit;
+    cursor:pointer;
+    border:none;
+    border-radius:4px;
+    font-weight:600;
+    font-size:13px;
+  }
+
+  .btn-primary{ background:var(--ink); color:#fff; padding:11px 16px; width:100%; }
+  .btn-primary:hover{ opacity:0.9; }
+  .btn-primary:disabled{ opacity:0.5; cursor:default; }
+
+  .btn-accent{ background:var(--terracotta); color:#fff; padding:11px 16px; width:100%; }
+  .btn-accent:hover{ opacity:0.9; }
+
+  .btn-ghost{ background:transparent; border:1px solid var(--border); color:var(--ink); padding:8px 12px; }
+  .btn-ghost:hover{ background:var(--hover); }
+
+  .btn-small{ padding:6px 10px; font-size:12px; }
+
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+  .chip{
+    border:1px solid var(--border); border-radius:4px; padding:5px 10px; font-size:12px;
+    background:#fff; cursor:pointer; color:var(--ink); display:flex; align-items:center; gap:6px;
+  }
+  .chip:hover{ background:var(--hover); }
+  .chip .x{ color:var(--grey-text); font-size:13px; line-height:1; }
+  .chip .x:hover{ color:var(--ink); }
+
+  hr.div{ border:none; border-top:1px solid var(--border); margin:20px 0; }
+
+  .font-option{ font-size:15px; }
+
+  .swatches{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .swatch{ width:24px; height:24px; border-radius:4px; border:1px solid var(--border); cursor:pointer; position:relative; }
+  .swatch.active::after{ content:''; position:absolute; inset:-3px; border:2px solid var(--ink); border-radius:6px; }
+  .color-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  input[type="color"]{ width:36px;height:28px;border:1px solid var(--border);border-radius:4px;padding:2px;cursor:pointer; }
+
+  .seg{ display:flex; border:1px solid var(--border); border-radius:4px; overflow:hidden; }
+  .seg button{ flex:1; background:#fff; color:var(--ink); padding:8px 6px; font-size:12px; border-radius:0; border-right:1px solid var(--border); }
+  .seg button:last-child{ border-right:none; }
+  .seg button.active{ background:var(--ink); color:#fff; }
+  .seg button:not(.active):hover{ background:var(--hover); }
+
+  .slider-row{ display:flex; justify-content:space-between; align-items:baseline; }
+  .slider-val{ font-size:11px; color:var(--grey-text); }
+  input[type="range"]{ width:100%; margin-top:6px; accent-color:var(--ink); }
+
+  .toggle-row{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:18px;
+  }
+  .toggle-row .field-label{ margin:0; }
+  .switch{
+    position:relative; width:36px; height:20px; border-radius:10px;
+    background:var(--border); cursor:pointer; flex-shrink:0;
+  }
+  .switch.on{ background:var(--ink); }
+  .switch::after{
+    content:''; position:absolute; top:2px; left:2px; width:16px; height:16px;
+    border-radius:50%; background:#fff; transition:left .12s ease;
+  }
+  .switch.on::after{ left:18px; }
+
+  .preview-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; }
+  .preview-count{ font-size:12px; color:var(--grey-text); }
+  .grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap:14px; }
+  @media (min-width: 1500px){ .grid{ grid-template-columns: repeat(3, 1fr); } }
+
+  .card{ border:1px solid var(--border); border-radius:4px; overflow:hidden; background:#fff; }
+  .card.overridden{ border-color:var(--terracotta); }
+  .card-thumb-wrap{ aspect-ratio: 4500/5400; overflow:hidden; cursor:zoom-in; position:relative; }
+  .card-thumb-wrap.bg-transparent{
+    background-image:
+      linear-gradient(45deg, #ccc 25%, transparent 25%),
+      linear-gradient(-45deg, #ccc 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #ccc 75%),
+      linear-gradient(-45deg, transparent 75%, #ccc 75%);
+    background-size:16px 16px;
+    background-position:0 0, 0 8px, 8px -8px, -8px 0px;
+    background-color:#fafafa;
+  }
+  .card-thumb-wrap.bg-white{ background-color:#ffffff; }
+  .card-thumb-wrap.bg-black{ background-color:#1a1a1a; }
+  .card-thumb-wrap.bg-grey{ background-color:#9b9b9b; }
+
+  .overridden-badge{
+    position:absolute; top:6px; left:6px;
+    background:var(--terracotta); color:#fff;
+    font-size:9px; letter-spacing:0.04em; text-transform:uppercase;
+    padding:3px 6px; border-radius:3px; font-weight:700;
+    pointer-events:none;
+  }
+
+  .design-canvas{
+    width:4500px; height:5400px; transform-origin: top left;
+    display:flex; align-items:center; justify-content:center; padding:0 6%;
+  }
+  .design-text{ width:100%; word-wrap:break-word; white-space:pre-wrap; }
+
+  .card-footer{ display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-top:1px solid var(--border); gap:6px; }
+  .card-label{ font-size:11px; color:var(--grey-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:46%; }
+  .card-actions{ display:flex; gap:6px; }
+
+  .empty-state{
+    color:var(--grey-text); font-size:13px; border:1px dashed var(--border);
+    border-radius:4px; padding:40px 20px; text-align:center;
+  }
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(10,10,10,0.85);
+    display:none; align-items:center; justify-content:center; z-index:1000; padding:40px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-shell{
+    display:flex; gap:24px; max-width:1000px; max-height:90vh; width:100%;
+  }
+  .modal-content{ background:#fff; border-radius:4px; overflow:hidden; flex-shrink:0; }
+  .modal-content .card-thumb-wrap{ width:420px; aspect-ratio:4500/5400; }
+  .modal-editor{
+    background:#fff; border-radius:4px; padding:20px; width:280px; flex-shrink:0;
+    overflow-y:auto;
+  }
+  .modal-editor .panel-header{ margin-bottom:12px; }
+  .modal-close{
+    position:absolute; top:24px; right:24px; background:#fff; border-radius:4px;
+    width:36px;height:36px; font-size:18px; color:var(--ink); z-index:1001;
+  }
+
+  ::-webkit-scrollbar{ width:10px; }
+  ::-webkit-scrollbar-thumb{ background:var(--border); border-radius:4px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- LEFT PANEL: Template Builder -->
+  <div class="panel">
+    <div class="panel-header">Template Builder</div>
+
+    <div class="chips" id="templateChips"></div>
+
+    <label class="field-label">Template</label>
+    <input type="text" id="templateInput" placeholder="{hobby} is my cardio">
+
+    <label class="field-label">Bulk values (one per line, or CSV if multiple placeholders)</label>
+    <textarea id="bulkValues" placeholder="knitting&#10;running&#10;tequila"></textarea>
+    <div class="hint">CSV supports quoted fields: "knitting, but angry" stays one value.</div>
+
+    <div style="margin-top:12px;">
+      <button class="btn-ghost btn-small" id="saveTemplateBtn">Save Template</button>
+    </div>
+
+    <hr class="div">
+
+    <button class="btn-accent" id="generateBtn">Generate</button>
+  </div>
+
+  <!-- MIDDLE PANEL: Design Controls -->
+  <div class="panel">
+    <div class="panel-header">Design Controls</div>
+
+    <label class="field-label">Font</label>
+    <select id="fontSelect"></select>
+
+    <label class="field-label">Text color</label>
+    <div class="color-row">
+      <input type="color" id="colorPicker" value="#0A0A0A">
+      <span class="slider-val" id="colorHexLabel">#0A0A0A</span>
+    </div>
+    <div class="swatches" id="colorSwatches"></div>
+
+    <label class="field-label">Background preview</label>
+    <select id="bgSelect">
+      <option value="transparent">Transparent</option>
+      <option value="white">White shirt</option>
+      <option value="black">Black shirt</option>
+      <option value="grey">Heather grey shirt</option>
+    </select>
+
+    <label class="field-label">Text alignment</label>
+    <div class="seg" id="alignSeg">
+      <button data-val="left">Left</button>
+      <button data-val="center" class="active">Center</button>
+      <button data-val="right">Right</button>
+    </div>
+
+    <label class="field-label">Line break mode</label>
+    <div class="seg" id="lineBreakSeg">
+      <button data-val="single" class="active">Single</button>
+      <button data-val="word">Word/line</button>
+      <button data-val="two">Two-line</button>
+    </div>
+
+    <label class="field-label">Text transform</label>
+    <div class="seg" id="transformSeg">
+      <button data-val="none" class="active">None</button>
+      <button data-val="upper">UPPER</button>
+      <button data-val="lower">lower</button>
+      <button data-val="title">Title</button>
+    </div>
+
+    <label class="field-label">
+      <div class="slider-row"><span>Letter spacing</span><span class="slider-val" id="letterSpacingVal">0px</span></div>
+    </label>
+    <input type="range" id="letterSpacing" min="-2" max="10" step="0.5" value="0">
+
+    <label class="field-label">
+      <div class="slider-row"><span>Max text width</span><span class="slider-val" id="maxWidthVal">88%</span></div>
+    </label>
+    <input type="range" id="maxWidth" min="40" max="100" step="1" value="88">
+
+    <div class="toggle-row">
+      <label class="field-label">Auto-fit font size</label>
+      <div class="switch on" id="autoFitToggle"></div>
+    </div>
+    <div class="hint">Shrinks each design individually so long text never overflows the canvas. Turn off to use one fixed size for every design.</div>
+
+    <label class="field-label">
+      <div class="slider-row"><span id="fontSizeLabel">Max font size</span><span class="slider-val" id="fontSizeVal">420px</span></div>
+    </label>
+    <input type="range" id="fontSize" min="60" max="900" step="5" value="420">
+  </div>
+
+  <!-- RIGHT PANEL: Preview Grid -->
+  <div class="panel">
+    <div class="preview-toolbar">
+      <div>
+        <div class="panel-header" style="margin-bottom:4px;">Preview</div>
+        <div class="preview-count" id="previewCount">0 designs</div>
+      </div>
+      <button class="btn-primary" id="downloadAllBtn" style="width:auto;">Download All (ZIP)</button>
+    </div>
+
+    <div class="grid" id="previewGrid">
+      <div class="empty-state" style="grid-column:1/-1;">
+        Build a template on the left, add some values, and hit Generate.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: enlarge + per-card override editor -->
+<div class="modal-overlay" id="modalOverlay">
+  <button class="modal-close" id="modalCloseBtn">&times;</button>
+  <div class="modal-shell">
+    <div class="modal-content" id="modalContent"></div>
+    <div class="modal-editor" id="modalEditor"></div>
+  </div>
+</div>
+
+<div id="renderRoot" style="position:fixed; top:-99999px; left:-99999px;"></div>
+
+<script>
+(function(){
+
+  // ---------------- Data ----------------
+  const FONTS = [
+    {name:'Anton', family:"'Anton', sans-serif"},
+    {name:'Bebas Neue', family:"'Bebas Neue', sans-serif"},
+    {name:'Archivo Black', family:"'Archivo Black', sans-serif"},
+    {name:'Bungee', family:"'Bungee', sans-serif"},
+    {name:'Playfair Display', family:"'Playfair Display', serif"},
+    {name:'DM Serif Display', family:"'DM Serif Display', serif"},
+    {name:'Abril Fatface', family:"'Abril Fatface', serif"},
+    {name:'Fraunces', family:"'Fraunces', serif"},
+    {name:'Space Grotesk', family:"'Space Grotesk', sans-serif"},
+    {name:'Caveat', family:"'Caveat', cursive"},
+    {name:'Permanent Marker', family:"'Permanent Marker', cursive"},
+    {name:'Shrikhand', family:"'Shrikhand', cursive"},
+  ];
+
+  const COLOR_PRESETS = [
+    {name:'Black', hex:'#000000'},
+    {name:'White', hex:'#FFFFFF'},
+    {name:'Cream', hex:'#F5E6D3'},
+    {name:'Terracotta', hex:'#C5573A'},
+    {name:'Sage', hex:'#7A8B6F'},
+    {name:'Navy', hex:'#1F2D4F'},
+    {name:'Mustard', hex:'#D4A017'},
+  ];
+
+  const SEED_TEMPLATES = [
+    "{hobby} is my cardio",
+    "World's okayest {role}",
+    "Just here for the {noun}",
+    "Property of the {name} family",
+    "Currently reading: {book}",
+  ];
+
+  const STORAGE_KEY = 'pod_toolkit_templates_v1';
+  const CANVAS_W = 4500, CANVAS_H = 5400;
+  const MIN_FONT_SIZE = 60;
+
+  // ---------------- Global design state (applies to all cards unless overridden) ----------------
+  let state = {
+    template: SEED_TEMPLATES[0],
+    bulkValues: "knitting\nrunning\nbaking\ntequila\nyoga",
+    font: FONTS[0].family,
+    fontName: FONTS[0].name,
+    color: '#000000',
+    bg: 'transparent',
+    align: 'center',
+    lineBreak: 'single',
+    transform: 'none',
+    letterSpacing: 0,
+    maxWidth: 88,
+    fontSize: 420,
+    autoFit: true
+  };
+
+  // designs: {id, text, valueSlug, override: null | {...partial style fields}}
+  let designs = [];
+
+  // ---------------- Helpers ----------------
+  function slugify(str){
+    return str.toString().toLowerCase()
+      .replace(/\{|\}/g,'')
+      .replace(/[^a-z0-9]+/g,'-')
+      .replace(/(^-|-$)/g,'')
+      .slice(0,60) || 'design';
+  }
+
+  function applyTransform(text, mode){
+    switch(mode){
+      case 'upper': return text.toUpperCase();
+      case 'lower': return text.toLowerCase();
+      case 'title': return text.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.substr(1).toLowerCase());
+      default: return text;
+    }
+  }
+
+  function applyLineBreak(text, mode){
+    if(mode === 'word') return text.split(' ').join('\n');
+    if(mode === 'two'){
+      const words = text.split(' ');
+      if(words.length < 2) return text;
+      const mid = Math.ceil(words.length/2);
+      return words.slice(0,mid).join(' ') + '\n' + words.slice(mid).join(' ');
+    }
+    return text;
+  }
+
+  function escapeHTML(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function extractPlaceholders(template){
+    const matches = template.match(/\{([^}]+)\}/g) || [];
+    return matches.map(m => m.slice(1,-1));
+  }
+
+  // Minimal RFC4180-ish CSV line parser: supports quoted fields with embedded commas
+  // and escaped quotes ("") inside quotes.
+  function parseCSVLine(line){
+    const out = [];
+    let cur = '';
+    let inQuotes = false;
+    for(let i = 0; i < line.length; i++){
+      const ch = line[i];
+      if(inQuotes){
+        if(ch === '"'){
+          if(line[i+1] === '"'){ cur += '"'; i++; }
+          else { inQuotes = false; }
+        } else {
+          cur += ch;
+        }
+      } else {
+        if(ch === '"'){ inQuotes = true; }
+        else if(ch === ','){ out.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
+      }
+    }
+    out.push(cur.trim());
+    return out;
+  }
+
+  function parseBulkValues(template, raw){
+    const placeholders = extractPlaceholders(template);
+    const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    if(lines.length === 0) return [];
+
+    if(placeholders.length > 1){
+      const header = parseCSVLine(lines[0]);
+      const rows = lines.slice(1);
+      return rows.map(row => {
+        const cells = parseCSVLine(row);
+        let filled = template;
+        header.forEach((h, i) => {
+          const re = new RegExp('\\{' + h.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\}', 'g');
+          filled = filled.replace(re, cells[i] || '');
+        });
+        return {raw: cells.join(' '), text: filled};
+      });
+    } else if(placeholders.length === 1){
+      const ph = placeholders[0];
+      const re = new RegExp('\\{' + ph.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\}', 'g');
+      // single placeholder: still respect quoted values so commas can appear in a value
+      return lines.map(v => {
+        const cleaned = parseCSVLine(v)[0] !== undefined && v.startsWith('"') ? parseCSVLine(v)[0] : v;
+        return {raw: cleaned, text: template.replace(re, cleaned)};
+      });
+    } else {
+      return [{raw: template, text: template}];
+    }
+  }
+
+  // Merge global state with a design's override (override wins per-field)
+  function effectiveStyle(d){
+    return Object.assign({}, state, d.override || {});
+  }
+
+  // ---------------- Auto-fit ----------------
+  // Binary-search the largest font size (down to MIN_FONT_SIZE) at which the
+  // styled text fits within the canvas's safe area (accounting for maxWidth and padding).
+  function computeAutoFitSize(text, style){
+    const probe = document.createElement('div');
+    probe.style.position = 'fixed';
+    probe.style.top = '-99999px';
+    probe.style.left = '-99999px';
+    probe.style.width = (CANVAS_W * (style.maxWidth/100)) + 'px';
+    probe.style.fontFamily = style.font;
+    probe.style.textAlign = style.align;
+    probe.style.letterSpacing = style.letterSpacing + 'px';
+    probe.style.lineHeight = '1.05';
+    probe.style.whiteSpace = 'pre-wrap';
+    probe.style.wordWrap = 'break-word';
+    document.body.appendChild(probe);
+
+    const broken = applyLineBreak(applyTransform(text, style.transform), style.lineBreak);
+    probe.innerHTML = broken.split('\n').map(l => escapeHTML(l)).join('<br>');
+
+    const maxAllowedHeight = CANVAS_H * 0.82; // vertical safe area
+    let lo = MIN_FONT_SIZE, hi = style.fontSize, best = MIN_FONT_SIZE;
+
+    // Binary search for largest size that fits both width (wrap) and height
+    for(let iter = 0; iter < 18; iter++){
+      const mid = Math.floor((lo + hi) / 2);
+      probe.style.fontSize = mid + 'px';
+      const h = probe.scrollHeight;
+      const w = probe.scrollWidth;
+      if(h <= maxAllowedHeight && w <= CANVAS_W * (style.maxWidth/100) + 2){
+        best = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+      if(lo > hi) break;
+    }
+
+    document.body.removeChild(probe);
+    return best;
+  }
+
+  // ---------------- Build canvas DOM for a design ----------------
+  function buildCanvasInner(d){
+    const style = effectiveStyle(d);
+    let fontSize = style.fontSize;
+    if(style.autoFit){
+      fontSize = computeAutoFitSize(d.text, style);
+    }
+
+    const div = document.createElement('div');
+    div.className = 'design-canvas';
+    const span = document.createElement('div');
+    span.className = 'design-text';
+    span.style.fontFamily = style.font;
+    span.style.color = style.color;
+    span.style.textAlign = style.align;
+    span.style.letterSpacing = style.letterSpacing + 'px';
+    span.style.fontSize = fontSize + 'px';
+    span.style.lineHeight = '1.05';
+    span.style.maxWidth = style.maxWidth + '%';
+    span.style.marginLeft = style.align === 'right' ? '0' : 'auto';
+    span.style.marginRight = style.align === 'left' ? '0' : 'auto';
+    const broken = applyLineBreak(applyTransform(d.text, style.transform), style.lineBreak);
+    span.innerHTML = broken.split('\n').map(l => escapeHTML(l)).join('<br>');
+    div.appendChild(span);
+    return div;
+  }
+
+  // ---------------- UI Build: global controls ----------------
+  function buildFontSelect(){
+    const sel = document.getElementById('fontSelect');
+    sel.innerHTML = '';
+    FONTS.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.family;
+      opt.dataset.name = f.name;
+      opt.textContent = f.name;
+      opt.style.fontFamily = f.family;
+      opt.className = 'font-option';
+      sel.appendChild(opt);
+    });
+    sel.value = state.font;
+    sel.addEventListener('change', () => {
+      state.font = sel.value;
+      const opt = FONTS.find(f => f.family === sel.value);
+      state.fontName = opt ? opt.name : '';
+      renderPreviews();
+    });
+  }
+
+  function buildColorSwatches(){
+    const wrap = document.getElementById('colorSwatches');
+    wrap.innerHTML = '';
+    COLOR_PRESETS.forEach(c => {
+      const sw = document.createElement('div');
+      sw.className = 'swatch' + (c.hex.toLowerCase() === state.color.toLowerCase() ? ' active' : '');
+      sw.style.background = c.hex;
+      sw.title = c.name;
+      sw.addEventListener('click', () => {
+        state.color = c.hex;
+        document.getElementById('colorPicker').value = c.hex;
+        document.getElementById('colorHexLabel').textContent = c.hex.toUpperCase();
+        document.querySelectorAll('#colorSwatches .swatch').forEach(s => s.classList.remove('active'));
+        sw.classList.add('active');
+        renderPreviews();
+      });
+      wrap.appendChild(sw);
+    });
+  }
+
+  function buildSeg(id, key){
+    const seg = document.getElementById(id);
+    seg.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        seg.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state[key] = btn.dataset.val;
+        renderPreviews();
+      });
+    });
+  }
+
+  function setupControls(){
+    buildFontSelect();
+    buildColorSwatches();
+
+    document.getElementById('colorPicker').addEventListener('input', (e) => {
+      state.color = e.target.value;
+      document.getElementById('colorHexLabel').textContent = e.target.value.toUpperCase();
+      document.querySelectorAll('#colorSwatches .swatch').forEach(s => s.classList.remove('active'));
+      renderPreviews();
+    });
+
+    document.getElementById('bgSelect').addEventListener('change', (e) => {
+      state.bg = e.target.value;
+      renderPreviews();
+    });
+
+    buildSeg('alignSeg', 'align');
+    buildSeg('lineBreakSeg', 'lineBreak');
+    buildSeg('transformSeg', 'transform');
+
+    const lsSlider = document.getElementById('letterSpacing');
+    lsSlider.addEventListener('input', () => {
+      state.letterSpacing = parseFloat(lsSlider.value);
+      document.getElementById('letterSpacingVal').textContent = state.letterSpacing + 'px';
+      renderPreviews();
+    });
+
+    const mwSlider = document.getElementById('maxWidth');
+    mwSlider.addEventListener('input', () => {
+      state.maxWidth = parseFloat(mwSlider.value);
+      document.getElementById('maxWidthVal').textContent = state.maxWidth + '%';
+      renderPreviews();
+    });
+
+    const fsSlider = document.getElementById('fontSize');
+    fsSlider.addEventListener('input', () => {
+      state.fontSize = parseFloat(fsSlider.value);
+      document.getElementById('fontSizeVal').textContent = state.fontSize + 'px';
+      renderPreviews();
+    });
+
+    const autoFitToggle = document.getElementById('autoFitToggle');
+    autoFitToggle.addEventListener('click', () => {
+      state.autoFit = !state.autoFit;
+      autoFitToggle.classList.toggle('on', state.autoFit);
+      document.getElementById('fontSizeLabel').textContent = state.autoFit ? 'Max font size' : 'Font size';
+      renderPreviews();
+    });
+  }
+
+  // ---------------- Templates (localStorage) ----------------
+  function loadSavedTemplates(){
+    try{ const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; }
+    catch(e){ return []; }
+  }
+  function saveSavedTemplates(list){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+    catch(e){ /* storage unavailable */ }
+  }
+
+  function renderTemplateChips(){
+    const wrap = document.getElementById('templateChips');
+    wrap.innerHTML = '';
+
+    SEED_TEMPLATES.forEach(t => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.innerHTML = `<span>${escapeHTML(t)}</span>`;
+      chip.addEventListener('click', () => {
+        document.getElementById('templateInput').value = t;
+        state.template = t;
+      });
+      wrap.appendChild(chip);
+    });
+
+    const saved = loadSavedTemplates();
+    saved.forEach((entry, idx) => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.innerHTML = `<span>${escapeHTML(entry.template)}</span><span class="x" data-idx="${idx}">&times;</span>`;
+      chip.querySelector('span:first-child').addEventListener('click', () => loadTemplateEntry(entry));
+      chip.querySelector('.x').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const list = loadSavedTemplates();
+        list.splice(idx, 1);
+        saveSavedTemplates(list);
+        renderTemplateChips();
+      });
+      wrap.appendChild(chip);
+    });
+  }
+
+  function loadTemplateEntry(entry){
+    document.getElementById('templateInput').value = entry.template;
+    document.getElementById('bulkValues').value = entry.bulkValues || '';
+    state.template = entry.template;
+    state.bulkValues = entry.bulkValues || '';
+
+    if(entry.design){
+      Object.assign(state, entry.design);
+      document.getElementById('fontSelect').value = state.font;
+      document.getElementById('colorPicker').value = state.color;
+      document.getElementById('colorHexLabel').textContent = state.color.toUpperCase();
+      document.getElementById('bgSelect').value = state.bg;
+      document.getElementById('letterSpacing').value = state.letterSpacing;
+      document.getElementById('letterSpacingVal').textContent = state.letterSpacing + 'px';
+      document.getElementById('maxWidth').value = state.maxWidth;
+      document.getElementById('maxWidthVal').textContent = state.maxWidth + '%';
+      document.getElementById('fontSize').value = state.fontSize;
+      document.getElementById('fontSizeVal').textContent = state.fontSize + 'px';
+      document.getElementById('autoFitToggle').classList.toggle('on', !!state.autoFit);
+      document.getElementById('fontSizeLabel').textContent = state.autoFit ? 'Max font size' : 'Font size';
+
+      ['alignSeg','lineBreakSeg','transformSeg'].forEach(segId => {
+        const seg = document.getElementById(segId);
+        const key = segId === 'alignSeg' ? 'align' : (segId === 'lineBreakSeg' ? 'lineBreak' : 'transform');
+        seg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.val === state[key]));
+      });
+
+      document.querySelectorAll('#colorSwatches .swatch').forEach(s => s.classList.remove('active'));
+    }
+
+    generateDesigns();
+  }
+
+  document.getElementById('saveTemplateBtn').addEventListener('click', () => {
+    const template = document.getElementById('templateInput').value.trim();
+    if(!template) return;
+    const bulkValues = document.getElementById('bulkValues').value;
+    const list = loadSavedTemplates();
+    list.push({
+      template, bulkValues,
+      design: {
+        font: state.font, fontName: state.fontName, color: state.color, bg: state.bg,
+        align: state.align, lineBreak: state.lineBreak, transform: state.transform,
+        letterSpacing: state.letterSpacing, maxWidth: state.maxWidth, fontSize: state.fontSize,
+        autoFit: state.autoFit
+      }
+    });
+    saveSavedTemplates(list);
+    renderTemplateChips();
+  });
+
+  // ---------------- Generate & Render Previews ----------------
+  function generateDesigns(){
+    const template = document.getElementById('templateInput').value.trim();
+    const bulkRaw = document.getElementById('bulkValues').value;
+    state.template = template;
+    state.bulkValues = bulkRaw;
+
+    if(!template){ designs = []; renderPreviews(); return; }
+
+    const parsed = parseBulkValues(template, bulkRaw);
+    // Preserve overrides for designs whose text didn't change, matched by index.
+    const prevOverrides = designs.map(d => d.override);
+    designs = parsed.map((p, i) => ({
+      id: 'd' + i + '_' + Date.now(),
+      text: p.text,
+      valueSlug: slugify(p.raw),
+      override: prevOverrides[i] || null
+    }));
+
+    renderPreviews();
+  }
+
+  function bgClass(bg){
+    return { transparent:'bg-transparent', white:'bg-white', black:'bg-black', grey:'bg-grey' }[bg] || 'bg-transparent';
+  }
+
+  function renderPreviews(){
+    const grid = document.getElementById('previewGrid');
+    const countEl = document.getElementById('previewCount');
+    grid.innerHTML = '';
+    countEl.textContent = designs.length + (designs.length === 1 ? ' design' : ' designs');
+
+    if(designs.length === 0){
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Build a template on the left, add some values, and hit Generate.</div>';
+      return;
+    }
+
+    designs.forEach(d => {
+      const style = effectiveStyle(d);
+      const card = document.createElement('div');
+      card.className = 'card' + (d.override ? ' overridden' : '');
+
+      const thumbWrap = document.createElement('div');
+      thumbWrap.className = 'card-thumb-wrap ' + bgClass(style.bg);
+      if(d.override){
+        const badge = document.createElement('div');
+        badge.className = 'overridden-badge';
+        badge.textContent = 'Edited';
+        thumbWrap.appendChild(badge);
+      }
+
+      const canvas = buildCanvasInner(d);
+      thumbWrap.appendChild(canvas);
+      thumbWrap.addEventListener('click', () => openModal(d));
+      card.appendChild(thumbWrap);
+
+      const footer = document.createElement('div');
+      footer.className = 'card-footer';
+      const label = document.createElement('div');
+      label.className = 'card-label';
+      label.textContent = d.text.replace(/\n/g,' ');
+      label.title = d.text;
+
+      const actions = document.createElement('div');
+      actions.className = 'card-actions';
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-ghost btn-small';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', (e) => { e.stopPropagation(); openModal(d); });
+      const dlBtn = document.createElement('button');
+      dlBtn.className = 'btn-ghost btn-small';
+      dlBtn.textContent = 'Download';
+      dlBtn.addEventListener('click', (e) => { e.stopPropagation(); downloadSingle(d); });
+      actions.appendChild(editBtn);
+      actions.appendChild(dlBtn);
+
+      footer.appendChild(label);
+      footer.appendChild(actions);
+      card.appendChild(footer);
+
+      grid.appendChild(card);
+    });
+
+    scaleThumbnails();
+  }
+
+  function scaleThumbnails(){
+    document.querySelectorAll('.card-thumb-wrap').forEach(wrap => {
+      const canvas = wrap.querySelector('.design-canvas');
+      if(!canvas) return;
+      const wrapWidth = wrap.getBoundingClientRect().width;
+      const scale = wrapWidth / CANVAS_W;
+      canvas.style.transform = `scale(${scale})`;
+    });
+  }
+  window.addEventListener('resize', scaleThumbnails);
+
+  // ---------------- Modal: enlarge + per-card override editor ----------------
+  let modalDesign = null;
+
+  function openModal(d){
+    modalDesign = d;
+    const overlay = document.getElementById('modalOverlay');
+    overlay.classList.add('open');
+    renderModalPreview();
+    renderModalEditor();
+  }
+
+  function renderModalPreview(){
+    const content = document.getElementById('modalContent');
+    content.innerHTML = '';
+    const style = effectiveStyle(modalDesign);
+    const thumbWrap = document.createElement('div');
+    thumbWrap.className = 'card-thumb-wrap ' + bgClass(style.bg);
+    const canvas = buildCanvasInner(modalDesign);
+    thumbWrap.appendChild(canvas);
+    content.appendChild(thumbWrap);
+    requestAnimationFrame(() => {
+      const wrapWidth = thumbWrap.getBoundingClientRect().width;
+      canvas.style.transform = `scale(${wrapWidth / CANVAS_W})`;
+    });
+  }
+
+  function renderModalEditor(){
+    const ed = document.getElementById('modalEditor');
+    const hasOverride = !!modalDesign.override;
+    const style = effectiveStyle(modalDesign);
+
+    ed.innerHTML = `
+      <div class="panel-header">Edit This Design</div>
+      <div class="hint" style="margin-bottom:14px;">${escapeHTML(modalDesign.text.replace(/\n/g,' '))}</div>
+
+      <label class="field-label" style="margin-top:0;">Font size override</label>
+      <input type="range" id="ovFontSize" min="60" max="900" step="5" value="${style.fontSize}">
+      <div class="slider-val" id="ovFontSizeVal">${style.fontSize}px</div>
+
+      <label class="field-label">Letter spacing override</label>
+      <input type="range" id="ovLetterSpacing" min="-2" max="10" step="0.5" value="${style.letterSpacing}">
+      <div class="slider-val" id="ovLetterSpacingVal">${style.letterSpacing}px</div>
+
+      <div class="toggle-row" style="margin-top:18px;">
+        <label class="field-label">Auto-fit (this card)</label>
+        <div class="switch ${style.autoFit ? 'on' : ''}" id="ovAutoFitToggle"></div>
+      </div>
+
+      <div style="margin-top:20px; display:flex; gap:8px;">
+        <button class="btn-ghost btn-small" id="ovResetBtn" ${hasOverride ? '' : 'disabled'}>Reset to global</button>
+        <button class="btn-ghost btn-small" id="ovDownloadBtn">Download</button>
+      </div>
+    `;
+
+    function ensureOverride(){
+      if(!modalDesign.override) modalDesign.override = {};
+      return modalDesign.override;
+    }
+
+    document.getElementById('ovFontSize').addEventListener('input', (e) => {
+      ensureOverride().fontSize = parseFloat(e.target.value);
+      document.getElementById('ovFontSizeVal').textContent = e.target.value + 'px';
+      refreshAfterOverrideChange();
+    });
+    document.getElementById('ovLetterSpacing').addEventListener('input', (e) => {
+      ensureOverride().letterSpacing = parseFloat(e.target.value);
+      document.getElementById('ovLetterSpacingVal').textContent = e.target.value + 'px';
+      refreshAfterOverrideChange();
+    });
+    document.getElementById('ovAutoFitToggle').addEventListener('click', (e) => {
+      const ov = ensureOverride();
+      ov.autoFit = !(modalDesign.override && 'autoFit' in modalDesign.override ? modalDesign.override.autoFit : state.autoFit);
+      e.target.classList.toggle('on', ov.autoFit);
+      refreshAfterOverrideChange();
+    });
+    document.getElementById('ovResetBtn').addEventListener('click', () => {
+      modalDesign.override = null;
+      renderModalPreview();
+      renderModalEditor();
+      renderPreviews();
+    });
+    document.getElementById('ovDownloadBtn').addEventListener('click', () => downloadSingle(modalDesign));
+
+    function refreshAfterOverrideChange(){
+      renderModalPreview();
+      // update card border/badge in grid without full re-render flicker
+      renderPreviews();
+    }
+  }
+
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('modalOverlay').addEventListener('click', (e) => {
+    if(e.target.id === 'modalOverlay') closeModal();
+  });
+  function closeModal(){
+    document.getElementById('modalOverlay').classList.remove('open');
+    modalDesign = null;
+  }
+
+  // ---------------- Export ----------------
+  function renderFullResCanvas(d){
+    const root = document.getElementById('renderRoot');
+    root.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.style.width = CANVAS_W + 'px';
+    wrap.style.height = CANVAS_H + 'px';
+    const canvas = buildCanvasInner(d);
+    canvas.style.transform = 'none';
+    wrap.appendChild(canvas);
+    root.appendChild(wrap);
+    return wrap;
+  }
+
+  async function renderToBlob(d){
+    const wrap = renderFullResCanvas(d);
+    await new Promise(r => requestAnimationFrame(r));
+    const canvasEl = await html2canvas(wrap, {
+      width: CANVAS_W, height: CANVAS_H, backgroundColor: null, scale: 1, useCORS: true
+    });
+    return new Promise(resolve => canvasEl.toBlob(resolve, 'image/png'));
+  }
+
+  function filenameFor(d){
+    const templateSlug = slugify(state.template);
+    return `${templateSlug}-${d.valueSlug}.png`;
+  }
+
+  async function downloadSingle(d){
+    const blob = await renderToBlob(d);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filenameFor(d);
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('downloadAllBtn').addEventListener('click', async () => {
+    if(designs.length === 0) return;
+    const btn = document.getElementById('downloadAllBtn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Packaging…';
+    btn.disabled = true;
+
+    try{
+      const zip = new JSZip();
+      for(const d of designs){
+        const blob = await renderToBlob(d);
+        zip.file(filenameFor(d), blob);
+      }
+      const zipBlob = await zip.generateAsync({type:'blob'});
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `${slugify(state.template)}-designs.zip`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  });
+
+  // ---------------- Init ----------------
+  document.getElementById('generateBtn').addEventListener('click', generateDesigns);
+  document.getElementById('templateInput').value = state.template;
+  document.getElementById('bulkValues').value = state.bulkValues;
+
+  setupControls();
+  renderTemplateChips();
+
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(generateDesigns);
+  } else {
+    generateDesigns();
+  }
+
+})();
+</script>
+</body>
+</html>
