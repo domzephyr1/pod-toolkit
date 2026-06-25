@@ -30,17 +30,29 @@ export default async function handler(req, res) {
 
     const publicUrl = blob.url;
 
-    // 3. Send to Printful API
-    const printfulResponse = await fetch('https://api.printful.com/files', {
+    // 3. Send to Printful API to Create a Product
+    const printfulResponse = await fetch('https://api.printful.com/store/products', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${printfulApiKey}`
       },
       body: JSON.stringify({
-        role: 'printfile',
-        url: publicUrl,
-        filename: filename
+        sync_product: {
+          name: `POD Design - ${filename.replace('.png', '')}`,
+          thumbnail: publicUrl
+        },
+        sync_variants: [
+          {
+            variant_id: 4013, // Bella + Canvas 3001 Black Large
+            retail_price: "24.99",
+            files: [
+              {
+                url: publicUrl
+              }
+            ]
+          }
+        ]
       })
     });
 
@@ -55,9 +67,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      message: 'Successfully uploaded to Printful',
+      message: 'Successfully created Draft Product in Printful',
       blobUrl: publicUrl,
-      printfulFileId: printfulData.result.id
+      printfulProductId: printfulData.result.id
     });
 
   } catch (error) {
