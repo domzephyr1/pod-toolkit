@@ -413,7 +413,15 @@
             <div class="group" style="background: #FAFAFA; padding: 12px; border-radius: 4px; border: 1px dashed var(--border-color)">
                 <label style="color: var(--accent-action); font-weight:700">⚡ Trend Hijacker Automation</label>
                 
-                <button id="aiTrendBtn" class="primary" style="margin-bottom: 12px; background: #6B46C1;" onclick="generateLiveTrend()">🤖 Auto-Generate Live Trend</button>
+                <div style="display:flex; gap: 8px; margin-bottom: 12px;">
+                    <select id="aiVariationCount" style="width: auto; flex-shrink: 0;">
+                        <option value="5">5 Designs</option>
+                        <option value="10">10 Designs</option>
+                        <option value="20">20 Designs</option>
+                        <option value="30" selected>30 Designs</option>
+                    </select>
+                    <button id="aiTrendBtn" class="primary" style="flex: 1; background: #6B46C1; margin: 0;" onclick="generateLiveTrend()">🤖 Auto-Generate Live Trend</button>
+                </div>
                 
                 <select id="hijackSelector" onchange="injectTrendVariables()">
                     <option value="">-- Or use Pre-Verified Niche Keywords --</option>
@@ -647,8 +655,14 @@
             btn.innerHTML = '🤖 Thinking of a trend...';
             btn.disabled = true;
             
+            const count = document.getElementById('aiVariationCount').value;
+            
             try {
-                const res = await fetch('/api/generate-trend', { method: 'POST' });
+                const res = await fetch('/api/generate-trend', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ count: count })
+                });
                 const data = await res.json();
                 
                 if (!res.ok) {

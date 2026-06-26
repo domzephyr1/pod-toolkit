@@ -8,6 +8,9 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'OPENAI_API_KEY environment variable is missing.' });
     }
 
+    // Default to 30 if not provided or invalid
+    const count = req.body && req.body.count ? parseInt(req.body.count, 10) : 30;
+
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -24,14 +27,14 @@ export default async function handler(req, res) {
                         content: `You are an expert Print-on-Demand e-commerce researcher.
 Your task is to identify a highly profitable, trending niche (e.g., hobbies, careers, dog breeds, introverts).
 Generate a short text template for a t-shirt design with ONE variable placeholder, like "WORLD'S OKAYEST {role}" or "DON'T TALK TO ME, I'M RECHARGING FROM {social_event}".
-Then, provide a list of exactly 30 unique, highly relatable values for that variable.
+Then, provide a list of exactly ${count} unique, highly relatable values for that variable.
 You MUST return ONLY a JSON object with two keys:
 - "template" (string): The text template containing the {placeholder}.
-- "values" (array of strings): Exactly 30 values for the placeholder.`
+- "values" (array of strings): Exactly ${count} values for the placeholder.`
                     },
                     {
                         role: 'user',
-                        content: 'Generate a new trending POD design template and 30 variations.'
+                        content: `Generate a new trending POD design template and ${count} variations.`
                     }
                 ]
             })
