@@ -8,7 +8,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Bungee&family=Playfair+Display:wght@700;900&family=DM+Serif+Display&family=Abril+Fatface&family=Fraunces:wght@700;900&family=Space+Grotesk:wght@400;500;600;700&family=Caveat:wght@700&family=Permanent+Marker&family=Shrikhand&family=Oswald:wght@400;500;600;700&family=Righteous&family=Bangers&family=Fredoka+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Bungee&family=Playfair+Display:wght@700;900&family=DM+Serif+Display&family=Abril+Fatface&family=Fraunces:wght@700;900&family=Space+Grotesk:wght@400;500;600;700&family=Caveat:wght@700&family=Permanent+Marker&family=Shrikhand&family=Oswald:wght@400;500;600;700&family=Righteous&family=Bangers&family=Fredoka+One&family=Metal+Mania&family=Pirata+One&family=Rye&family=Creepster&family=Special+Elite&family=Cinzel+Decorative&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -1142,6 +1142,12 @@ input[type="range"]{
   //  DATA — Fonts, Colors, Presets, SVG Graphics
   // ======================================================================
   const FONTS = [
+    {name:'Metal Mania',      family:"'Metal Mania', cursive"},
+    {name:'Pirata One',       family:"'Pirata One', cursive"},
+    {name:'Rye',              family:"'Rye', cursive"},
+    {name:'Creepster',        family:"'Creepster', cursive"},
+    {name:'Special Elite',    family:"'Special Elite', cursive"},
+    {name:'Cinzel Decorative',family:"'Cinzel Decorative', serif"},
     {name:'Anton',            family:"'Anton', sans-serif"},
     {name:'Bebas Neue',       family:"'Bebas Neue', sans-serif"},
     {name:'Archivo Black',    family:"'Archivo Black', sans-serif"},
@@ -1188,46 +1194,95 @@ input[type="range"]{
 
   const STYLE_PRESETS = [
     {
-      name:'Bold Statement', icon:'💥',
+      name:'Gothic Metal', icon:'💀',
       font: FONTS[0].family, fontName: FONTS[0].name,
+      color:'#ef4444', transform:'upper', lineBreak:'single', letterSpacing:1, effect:'shadow',
+      graphic:'skull'
+    },
+    {
+      name:'Rebel Eagle', icon:'🦅',
+      font: FONTS[1].family, fontName: FONTS[1].name,
+      color:'#F5E6D3', transform:'upper', lineBreak:'two', letterSpacing:2, effect:'3d',
+      graphic:'eagle'
+    },
+    {
+      name:'Outlaw Wild', icon:'⚡',
+      font: FONTS[2].family, fontName: FONTS[2].name,
+      color:'#D4A017', transform:'upper', lineBreak:'single', letterSpacing:3, effect:'outline',
+      graphic:'lightning'
+    },
+    {
+      name:'Cyber Edge', icon:'🔥',
+      font: FONTS[3].family, fontName: FONTS[3].name,
+      color:'#EC4899', transform:'upper', lineBreak:'single', letterSpacing:0, effect:'glow',
+      graphic:'flame'
+    },
+    {
+      name:'Bold Statement', icon:'💥',
+      font: FONTS[6].family, fontName: FONTS[6].name,
       color:'#FFFFFF', transform:'upper', lineBreak:'word', letterSpacing:2, effect:'none',
       graphic:'none'
     },
     {
       name:'Retro', icon:'🕹️',
-      font: FONTS[6].family, fontName: FONTS[6].name,
+      font: FONTS[7].family, fontName: FONTS[7].name,
       color:'#F5E6D3', transform:'upper', lineBreak:'single', letterSpacing:3, effect:'shadow',
       graphic:'arch-above'
     },
     {
       name:'Minimalist', icon:'🤍',
-      font: FONTS[11].family, fontName: FONTS[11].name,
+      font: FONTS[17].family, fontName: FONTS[17].name,
       color:'#000000', transform:'lower', lineBreak:'single', letterSpacing:4, effect:'none',
       graphic:'none'
     },
     {
-      name:'Vintage', icon:'📜',
-      font: FONTS[7].family, fontName: FONTS[7].name,
+      name:'Vintage Laurel', icon:'📜',
+      font: FONTS[13].family, fontName: FONTS[13].name,
       color:'#1F2D4F', transform:'title', lineBreak:'two', letterSpacing:1, effect:'none',
       graphic:'laurel'
-    },
-    {
-      name:'Streetwear', icon:'🔥',
-      font: FONTS[3].family, fontName: FONTS[3].name,
-      color:'#FF6B6B', transform:'upper', lineBreak:'single', letterSpacing:0, effect:'outline',
-      graphic:'none'
-    },
-    {
-      name:'Varsity', icon:'🏈',
-      font: FONTS[1].family, fontName: FONTS[1].name,
-      color:'#D4A017', transform:'upper', lineBreak:'single', letterSpacing:5, effect:'3d',
-      graphic:'banner'
     },
   ];
 
   // SVG graphic elements (inline SVG strings)
   const GRAPHIC_ELEMENTS = {
     'none': { name:'None', svg:'' },
+    'skull': {
+      name:'Skull',
+      svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 15 C30 15 20 28 20 45 C20 58 26 68 34 72 L34 85 C34 88 38 90 42 90 L58 90 C62 90 66 88 66 85 L66 72 C74 68 80 58 80 45 C80 28 70 15 50 15 Z" stroke="currentColor" stroke-width="4" fill="none" stroke-linejoin="round"/>
+        <circle cx="38" cy="48" r="8" fill="currentColor"/>
+        <circle cx="62" cy="48" r="8" fill="currentColor"/>
+        <path d="M47 62 L53 62 L50 56 Z" fill="currentColor"/>
+        <path d="M42 78 L42 85 M50 78 L50 85 M58 78 L58 85" stroke="currentColor" stroke-width="3"/>
+      </svg>`,
+      placement:'below',
+      width:'30%'
+    },
+    'eagle': {
+      name:'Eagle',
+      svg: `<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 20 C35 15 50 35 60 45 C70 35 85 15 110 20 C85 28 70 42 66 52 L60 48 L54 52 C50 42 35 28 10 20 Z" fill="currentColor"/>
+        <path d="M60 45 L57 58 C57 59 58 60 60 59 L63 58 Z" fill="currentColor"/>
+      </svg>`,
+      placement:'above',
+      width:'35%'
+    },
+    'lightning': {
+      name:'Lightning',
+      svg: `<svg viewBox="0 0 60 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M35 5 L10 50 L28 50 L15 95 L50 40 L30 40 Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round" fill="none"/>
+      </svg>`,
+      placement:'above',
+      width:'18%'
+    },
+    'flame': {
+      name:'Flame',
+      svg: `<svg viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M40 90 C60 90 70 70 70 50 C70 15 45 5 45 5 C45 5 55 25 40 45 C25 65 35 5 20 25 C10 40 10 65 10 75 C10 85 25 90 40 90 Z" stroke="currentColor" stroke-width="4" fill="none" stroke-linejoin="round"/>
+      </svg>`,
+      placement:'below',
+      width:'25%'
+    },
     'arch-above': {
       name:'Arch',
       svg: `<svg viewBox="0 0 600 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1291,31 +1346,6 @@ input[type="range"]{
       </svg>`,
       placement:'wrap',
       width:'90%'
-    },
-    'double-line': {
-      name:'Lines',
-      svg: `<svg viewBox="0 0 600 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <line x1="30" y1="8" x2="570" y2="8" stroke="currentColor" stroke-width="3"/>
-        <line x1="30" y1="22" x2="570" y2="22" stroke="currentColor" stroke-width="3"/>
-      </svg>`,
-      placement:'below',
-      width:'55%'
-    },
-    'diamond': {
-      name:'Diamond',
-      svg: `<svg viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="50,5 95,30 50,55 5,30" stroke="currentColor" stroke-width="3" fill="none"/>
-      </svg>`,
-      placement:'above',
-      width:'12%'
-    },
-    'zigzag': {
-      name:'Zigzag',
-      svg: `<svg viewBox="0 0 600 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <polyline points="20,30 60,10 100,30 140,10 180,30 220,10 260,30 300,10 340,30 380,10 420,30 460,10 500,30 540,10 580,30" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>`,
-      placement:'below',
-      width:'55%'
     },
   };
 

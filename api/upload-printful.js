@@ -1,5 +1,3 @@
-const { put } = require('@vercel/blob');
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -21,16 +19,34 @@ export default async function handler(req, res) {
     const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64Data, 'base64');
 
-    // 2. Upload to Vercel Blob
-    const blobName = `designs/${Date.now()}_${filename.replace(/[^a-zA-Z0-9.\-]/g, '_')}`;
-    const blob = await put(blobName, buffer, {
-      access: 'public',
-      contentType: 'image/png'
+    // 2. Upload directly to Printful File Library via FormData
+    const fileBlob = new Blob([buffer], { type: 'image/png' });
+    const formData = new FormData();
+    formData.append('file', fileBlob, filename);
+    formData.append('role', 'print');
+
+    console.log(`Uploading file ${filename} to Printful Library...`);
+    const fileUploadRes = await fetch('https://api.printful.com/files', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${printfulApiKey}`
+      },
+      body: formData
     });
 
-    const publicUrl = blob.url;
+    const fileUploadData = await fileUploadRes.json();
+    if (!fileUploadRes.ok) {
+      console.error("Printful File Upload Error:", fileUploadData);
+      return res.status(fileUploadRes.status).json({
+        error: 'Printful File Upload Error',
+        details: fileUploadData
+      });
+    }
 
-    // 3. Send to Printful API to Create a Product
+    const printfulFile = fileUploadData.result;
+    console.log(`Successfully uploaded file to Printful. File ID: ${printfulFile.id}`);
+
+    // 3. Send to Printful API to Create a Sync Product using the File ID
     const printfulResponse = await fetch('https://api.printful.com/store/products', {
       method: 'POST',
       headers: {
@@ -40,7 +56,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         sync_product: {
           name: `POD Design - ${filename.replace('.png', '')}`,
-          thumbnail: publicUrl
+          thumbnail: printfulFile.preview_url || printfulFile.thumbnail_url || printfulFile.url
         },
         sync_variants: [
           {
@@ -48,7 +64,7 @@ export default async function handler(req, res) {
             retail_price: "24.99",
             files: [
               {
-                url: publicUrl
+                id: printfulFile.id
               }
             ]
           }
@@ -59,8 +75,9 @@ export default async function handler(req, res) {
     const printfulData = await printfulResponse.json();
 
     if (!printfulResponse.ok) {
+      console.error("Printful Product Sync Error", printfulData);
       return res.status(printfulResponse.status).json({ 
-        error: 'Printful API Error', 
+        error: 'Printful Product Sync Error', 
         details: printfulData 
       });
     }
@@ -68,7 +85,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       message: 'Successfully created Draft Product in Printful',
-      blobUrl: publicUrl,
+      fileId: printfulFile.id,
       printfulProductId: printfulData.result.id
     });
 
@@ -77,3 +94,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 }
+
