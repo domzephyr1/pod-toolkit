@@ -1,2601 +1,990 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>POD Design Studio — T-Shirt Design Generator</title>
-<meta name="description" content="Generate bulk t-shirt designs with style presets, mockup previews, and one-click export. No backend, no build step.">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Design Print-On-Demand Toolkit</title>
+    <!-- Modern UI Sans-Serif Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Abril+Fatface&family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Bungee&family=Caveat&family=DM+Serif+Display&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Shrikhand&display=swap" rel="stylesheet">
+    
+    <!-- CDNs for High-Res Canvas Export & Archiving -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Bungee&family=Playfair+Display:wght@700;900&family=DM+Serif+Display&family=Abril+Fatface&family=Fraunces:wght@700;900&family=Space+Grotesk:wght@400;500;600;700&family=Caveat:wght@700&family=Permanent+Marker&family=Shrikhand&family=Oswald:wght@400;500;600;700&family=Righteous&family=Bangers&family=Fredoka+One&family=Metal+Mania&family=Pirata+One&family=Rye&family=Creepster&family=Special+Elite&family=Cinzel+Decorative&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #FFFFFF;
+            --border-color: #E5E5E5;
+            --text-main: #0A0A0A;
+            --text-muted: #7A7A7A;
+            --accent-primary: #0A0A0A;
+            --accent-action: #C5573A; /* Terracotta for main actions */
+            --hover-bg: #F5F5F5;
+        }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-<style>
-/* ============================================================
-   DESIGN SYSTEM — Premium Dark SaaS
-   ============================================================ */
-:root {
-  --bg:       #07090f;
-  --bg2:      #0d1117;
-  --bg3:      #131b27;
-  --bg4:      #1a2332;
-  --c1:       #6366f1;
-  --c2:       #06b6d4;
-  --c3:       #8b5cf6;
-  --gold:     #f59e0b;
-  --red:      #ef4444;
-  --green:    #22c55e;
-  --text:     #e8edf5;
-  --muted:    #7c8fa8;
-  --dimmed:   #4a5568;
-  --border:   rgba(255,255,255,0.07);
-  --border2:  rgba(255,255,255,0.12);
-  --glow1:    rgba(99,102,241,0.45);
-  --glow2:    rgba(6,182,212,0.35);
-  --radius:   10px;
-  --radius-lg:16px;
-  --transition: 200ms cubic-bezier(0.4,0,0.2,1);
-}
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
 
-*{ box-sizing:border-box; margin:0; padding:0; }
-html,body{ height:100%; }
+        /* Top Header Utilities */
+        header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-body{
-  font-family:'Inter', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  font-size:13px;
-  line-height:1.6;
-  -webkit-font-smoothing: antialiased;
-  overflow: hidden;
-}
+        header h1 {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
 
-h1,h2,h3,h4{
-  font-family:'Plus Jakarta Sans', sans-serif;
-  font-weight:700;
-  letter-spacing:-0.03em;
-  line-height:1.1;
-}
+        /* Main App Grid Layout */
+        .workspace {
+            display: grid;
+            grid-template-columns: 320px 340px 1fr;
+            flex: 1;
+            overflow: hidden;
+        }
 
-/* ============================================================
-   SCROLLBAR
-   ============================================================ */
-::-webkit-scrollbar{ width:6px; }
-::-webkit-scrollbar-track{ background:transparent; }
-::-webkit-scrollbar-thumb{ background:var(--border2); border-radius:3px; }
-::-webkit-scrollbar-thumb:hover{ background:var(--muted); }
+        .panel {
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 24px;
+        }
 
-/* ============================================================
-   APP LAYOUT
-   ============================================================ */
-.app{
-  display:grid;
-  grid-template-columns: 340px 300px 1fr;
-  grid-template-rows: 56px 1fr;
-  height:100vh;
-  overflow:hidden;
-}
+        .panel:last-child {
+            border-right: none;
+            background-color: #FAFAFA;
+        }
 
-.topbar{
-  grid-column: 1 / -1;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 20px;
-  background: var(--bg2);
-  border-bottom:1px solid var(--border);
-  z-index:10;
-}
-.topbar-brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.topbar-logo{
-  width:28px; height:28px;
-  background: linear-gradient(135deg, var(--c1), var(--c2));
-  border-radius:7px;
-  display:flex; align-items:center; justify-content:center;
-  font-weight:900; font-size:14px; color:#fff;
-  font-family:'Plus Jakarta Sans',sans-serif;
-}
-.topbar-title{
-  font-family:'Plus Jakarta Sans',sans-serif;
-  font-weight:800;
-  font-size:15px;
-  letter-spacing:-0.02em;
-  background: linear-gradient(135deg, var(--c1), var(--c2));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  background-clip:text;
-}
-.topbar-subtitle{
-  font-size:11px;
-  color:var(--muted);
-  margin-left:4px;
-}
-.topbar-actions{ display:flex; gap:8px; align-items:center; }
+        h2 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
 
-/* Panels */
-.panel{
-  border-right:1px solid var(--border);
-  padding:20px;
-  overflow-y:auto;
-  background: var(--bg2);
-}
-.panel:nth-child(3){
-  background: var(--bg);
-  border-right:none;
-  padding:20px 24px;
-}
+        /* Form Controls UI Elements */
+        .group {
+            margin-bottom: 20px;
+        }
 
-.panel-header{
-  font-family:'Plus Jakarta Sans',sans-serif;
-  font-size:10px;
-  letter-spacing:0.12em;
-  text-transform:uppercase;
-  color:var(--muted);
-  margin-bottom:14px;
-  font-weight:700;
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.panel-header .icon{
-  width:14px; height:14px;
-  opacity:0.6;
-}
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
 
-/* ============================================================
-   FORM CONTROLS
-   ============================================================ */
-label.field-label{
-  display:block;
-  font-size:11px;
-  color:var(--muted);
-  margin-bottom:5px;
-  margin-top:16px;
-  font-weight:500;
-  letter-spacing:0.02em;
-}
-label.field-label:first-of-type{ margin-top:0; }
+        input[type="text"], textarea, select {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 13px;
+            color: var(--text-main);
+            background: #FFFFFF;
+            outline: none;
+            transition: border-color 0.2s;
+        }
 
-input[type="text"], textarea, select{
-  width:100%;
-  border:1px solid var(--border2);
-  border-radius: var(--radius);
-  padding:9px 11px;
-  font-family:'Inter',sans-serif;
-  font-size:12.5px;
-  color:var(--text);
-  background: var(--bg3);
-  outline:none;
-  transition: border-color var(--transition), box-shadow var(--transition);
-}
-input[type="text"]:focus, textarea:focus, select:focus{
-  border-color: var(--c1);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
-}
-textarea{
-  resize:vertical;
-  min-height:100px;
-  line-height:1.6;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size:12px;
-}
-select{
-  cursor:pointer;
-  appearance:none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237c8fa8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;
-  background-position: right 10px center;
-  padding-right:28px;
-}
-select option{ background:var(--bg3); color:var(--text); }
+        input[type="text"]:focus, textarea:focus, select:focus {
+            border-color: var(--text-main);
+        }
 
-.hint{
-  font-size:10.5px;
-  color:var(--dimmed);
-  margin-top:5px;
-  line-height:1.5;
-}
+        textarea {
+            resize: none;
+            height: 120px;
+            font-family: monospace;
+        }
 
-/* ============================================================
-   BUTTONS
-   ============================================================ */
-button{
-  font-family:'Inter',sans-serif;
-  cursor:pointer;
-  border:none;
-  border-radius: var(--radius);
-  font-weight:600;
-  font-size:12.5px;
-  transition: all var(--transition);
-}
+        /* Sliders */
+        .slider-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .slider-val { font-size: 11px; color: var(--text-muted); }
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--text-main);
+        }
 
-.btn-primary{
-  background: linear-gradient(135deg, var(--c1), var(--c3));
-  color:#fff;
-  padding:10px 16px;
-  width:100%;
-  box-shadow: 0 4px 20px var(--glow1);
-}
-.btn-primary:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 6px 30px var(--glow1);
-}
-.btn-primary:disabled{ opacity:0.4; cursor:default; transform:none; }
+        /* Segmented Buttons Control Button Layout */
+        .segmented {
+            display: flex;
+            gap: 4px;
+            background: #F0F0F0;
+            padding: 3px;
+            border-radius: 4px;
+        }
 
-.btn-accent{
-  background: linear-gradient(135deg, var(--c2), var(--c1));
-  color:#fff;
-  padding:10px 16px;
-  width:100%;
-  box-shadow: 0 4px 20px var(--glow2);
-}
-.btn-accent:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 6px 30px var(--glow2);
-}
+        .segmented button {
+            flex: 1;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            font-size: 11px;
+            padding: 6px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
 
-.btn-ghost{
-  background: transparent;
-  border:1px solid var(--border2);
-  color: var(--text);
-  padding:7px 12px;
-}
-.btn-ghost:hover{
-  background: var(--bg4);
-  border-color: var(--c1);
-  color: #fff;
-}
+        .segmented button.active {
+            background: #FFFFFF;
+            font-weight: 500;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
 
-.btn-small{ padding:5px 10px; font-size:11px; border-radius:6px; }
+        /* Preset Chips Container styling */
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
 
-.btn-icon{
-  background:transparent;
-  border:1px solid var(--border2);
-  color:var(--muted);
-  width:32px; height:32px;
-  display:flex; align-items:center; justify-content:center;
-  border-radius:8px;
-  font-size:14px;
-  padding:0;
-}
-.btn-icon:hover{ background:var(--bg4); color:var(--text); border-color:var(--c1); }
+        .chip {
+            font-size: 11px;
+            background: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
-/* ============================================================
-   CHIPS (template quick picks)
-   ============================================================ */
-.chips{ display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px; }
-.chip{
-  border:1px solid var(--border2);
-  border-radius:6px;
-  padding:4px 9px;
-  font-size:11px;
-  background: var(--bg3);
-  cursor:pointer;
-  color:var(--muted);
-  display:flex;
-  align-items:center;
-  gap:5px;
-  transition: all var(--transition);
-}
-.chip:hover{
-  background: var(--bg4);
-  color:var(--text);
-  border-color: var(--c1);
-}
-.chip .x{
-  color:var(--dimmed);
-  font-size:12px;
-  line-height:1;
-  margin-left:2px;
-}
-.chip .x:hover{ color:var(--red); }
+        .chip:hover {
+            border-color: var(--text-main);
+            background: #FFFFFF;
+        }
 
-/* ============================================================
-   DIVIDER
-   ============================================================ */
-hr.div{ border:none; border-top:1px solid var(--border); margin:16px 0; }
+        /* Color Picker Swatches */
+        .color-presets {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
 
-/* ============================================================
-   FONT OPTION
-   ============================================================ */
-.font-option{ font-size:14px; }
+        .swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
 
-/* ============================================================
-   COLOR SWATCHES
-   ============================================================ */
-.swatches{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
-.swatch{
-  width:22px; height:22px; border-radius:6px;
-  border:2px solid transparent; cursor:pointer;
-  position:relative;
-  transition: all var(--transition);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
-}
-.swatch:hover{ transform:scale(1.15); }
-.swatch.active{
-  box-shadow: 0 0 0 2px var(--c1), inset 0 0 0 1px rgba(255,255,255,0.2);
-}
+        .swatch:hover, .swatch.active {
+            transform: scale(1.1);
+            border-color: var(--text-main);
+        }
 
-.color-row{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-input[type="color"]{
-  width:34px; height:26px;
-  border:1px solid var(--border2);
-  border-radius:6px;
-  padding:2px;
-  cursor:pointer;
-  background:var(--bg3);
-}
+        /* Action Buttons Utilities */
+        button.primary {
+            width: 100%;
+            background: var(--accent-action);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: inherit;
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
 
-/* ============================================================
-   SEGMENTED CONTROL
-   ============================================================ */
-.seg{
-  display:flex;
-  border:1px solid var(--border2);
-  border-radius: var(--radius);
-  overflow:hidden;
-  background: var(--bg3);
-}
-.seg button{
-  flex:1;
-  background:transparent;
-  color:var(--muted);
-  padding:7px 4px;
-  font-size:11px;
-  border-radius:0;
-  border-right:1px solid var(--border);
-  font-weight:500;
-}
-.seg button:last-child{ border-right:none; }
-.seg button.active{
-  background: linear-gradient(135deg, var(--c1), var(--c3));
-  color:#fff;
-  font-weight:600;
-}
-.seg button:not(.active):hover{ background:var(--bg4); color:var(--text); }
+        button.primary:hover { opacity: 0.9; }
 
-/* ============================================================
-   SLIDERS
-   ============================================================ */
-.slider-row{ display:flex; justify-content:space-between; align-items:baseline; }
-.slider-val{ font-size:10px; color:var(--c2); font-weight:600; font-family:'JetBrains Mono',monospace; }
-input[type="range"]{
-  width:100%;
-  margin-top:5px;
-  accent-color:var(--c1);
-  height:4px;
-}
+        button.secondary {
+            width: 100%;
+            background: var(--accent-primary);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
 
-/* ============================================================
-   TOGGLE
-   ============================================================ */
-.toggle-row{
-  display:flex; align-items:center; justify-content:space-between;
-  margin-top:14px;
-}
-.toggle-row .field-label{ margin:0; }
-.switch{
-  position:relative; width:34px; height:18px; border-radius:9px;
-  background: var(--bg4);
-  border:1px solid var(--border2);
-  cursor:pointer; flex-shrink:0;
-  transition: all var(--transition);
-}
-.switch.on{
-  background: linear-gradient(135deg, var(--c1), var(--c2));
-  border-color: transparent;
-}
-.switch::after{
-  content:''; position:absolute; top:2px; left:2px; width:12px; height:12px;
-  border-radius:50%; background:#fff; transition: left .15s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-.switch.on::after{ left:18px; }
+        /* Right Panel Elements Viewport Display Grid */
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
 
-/* ============================================================
-   STYLE PRESETS
-   ============================================================ */
-.presets-grid{
-  display:grid;
-  grid-template-columns: repeat(2,1fr);
-  gap:6px;
-  margin-top:8px;
-}
-.preset-card{
-  border:1px solid var(--border2);
-  border-radius:8px;
-  padding:10px 8px;
-  text-align:center;
-  cursor:pointer;
-  background: var(--bg3);
-  transition: all var(--transition);
-  position:relative;
-  overflow:hidden;
-}
-.preset-card::before{
-  content:'';
-  position:absolute;
-  inset:0;
-  background: linear-gradient(135deg, rgba(99,102,241,0.08), transparent);
-  opacity:0;
-  transition: opacity var(--transition);
-}
-.preset-card:hover::before{ opacity:1; }
-.preset-card:hover{
-  border-color:var(--c1);
-  transform:translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-}
-.preset-card.active{
-  border-color:var(--c1);
-  background: linear-gradient(135deg, rgba(99,102,241,0.12), var(--bg3));
-  box-shadow: 0 0 20px var(--glow1);
-}
-.preset-card-name{
-  font-size:10.5px;
-  font-weight:600;
-  color:var(--text);
-  margin-top:4px;
-  position:relative;
-  z-index:1;
-}
-.preset-card-preview{
-  font-size:16px;
-  line-height:1.1;
-  height:32px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  z-index:1;
-  overflow:hidden;
-}
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
 
-/* ============================================================
-   PREVIEW AREA
-   ============================================================ */
-.preview-toolbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:16px;
-  gap:12px;
-}
-.preview-toolbar-left{ display:flex; align-items:center; gap:12px; }
-.preview-count{
-  font-size:11px;
-  color:var(--muted);
-  font-weight:500;
-}
-.preview-mode-toggle{
-  display:flex;
-  border:1px solid var(--border2);
-  border-radius:8px;
-  overflow:hidden;
-}
-.preview-mode-toggle button{
-  background:transparent;
-  color:var(--muted);
-  padding:5px 10px;
-  font-size:11px;
-  border-radius:0;
-  border-right:1px solid var(--border);
-}
-.preview-mode-toggle button:last-child{ border-right:none; }
-.preview-mode-toggle button.active{
-  background:var(--c1);
-  color:#fff;
-}
-.preview-mode-toggle button:not(.active):hover{
-  background:var(--bg4);
-}
+        .card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-.grid{
-  display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap:14px;
-}
+        /* Production Sandbox Sizing Element Configuration matrix ratio mapping wrapper */
+        .canvas-container-wrapper {
+            width: 100%;
+            aspect-ratio: 45 / 54;
+            position: relative;
+            overflow: hidden;
+            background: #FFFFFF;
+        }
 
-/* ============================================================
-   DESIGN CARDS
-   ============================================================ */
-.card{
-  border:1px solid var(--border2);
-  border-radius: var(--radius-lg);
-  overflow:hidden;
-  background: var(--bg2);
-  transition: all var(--transition);
-  animation: cardFadeIn 0.4s ease both;
-}
-@keyframes cardFadeIn{
-  from{ opacity:0; transform:translateY(12px) scale(0.97); }
-  to{ opacity:1; transform:translateY(0) scale(1); }
-}
-.card:hover{
-  transform: translateY(-4px);
-  border-color: rgba(99,102,241,0.35);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 30px rgba(99,102,241,0.1);
-}
-.card.overridden{ border-color:var(--gold); }
+        /* Checkered Transparent Texture Layout Background */
+        .bg-transparent {
+            background-color: #333;
+            background-image: linear-gradient(45deg, #444 25%, transparent 25%), linear-gradient(-45deg, #444 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #444 75%), linear-gradient(-45deg, transparent 75%, #444 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+        .bg-white { background: #FFFFFF !important; }
+        .bg-black { background: #111111 !important; }
+        .bg-grey { background: #7F7F7F !important; }
 
-.card-thumb-wrap{
-  aspect-ratio: 4500/5400;
-  overflow:hidden;
-  cursor:zoom-in;
-  position:relative;
-}
-.card-thumb-wrap.bg-transparent{
-  background-image:
-    linear-gradient(45deg, #1a1a2e 25%, transparent 25%),
-    linear-gradient(-45deg, #1a1a2e 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #1a1a2e 75%),
-    linear-gradient(-45deg, transparent 75%, #1a1a2e 75%);
-  background-size:16px 16px;
-  background-position:0 0, 0 8px, 8px -8px, -8px 0px;
-  background-color: var(--bg3);
-}
-.card-thumb-wrap.bg-white{ background-color:#ffffff; }
-.card-thumb-wrap.bg-black{ background-color:#1a1a1a; }
-.card-thumb-wrap.bg-grey{ background-color:#9b9b9b; }
+        /* Real Production Hidden / Downscaled Sandbox Canvas Assembly Element */
+        .tshirt-canvas {
+            width: 4500px;
+            height: 5400px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: top left;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 300px;
+            box-sizing: border-box;
+            background: transparent !important;
+        }
 
-/* T-shirt mockup mode */
-.card-thumb-wrap.mockup-mode{
-  background: var(--bg3) !important;
-  background-image: none !important;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.tshirt-mockup{
-  width:100%;
-  height:100%;
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.tshirt-svg{
-  width:80%;
-  height:auto;
-  max-height:85%;
-}
-.tshirt-design-area{
-  position:absolute;
-  top:28%;
-  left:28%;
-  width:44%;
-  height:34%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-}
-.tshirt-design-area .design-canvas{
-  transform-origin:center center !important;
-}
+        /* Dynamic Layout Text Block Typography Wrapping Engine Logic */
+        .text-wrapper-box {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
 
-.overridden-badge{
-  position:absolute; top:8px; left:8px;
-  background: linear-gradient(135deg, var(--gold), #d97706);
-  color:#fff;
-  font-size:8px; letter-spacing:0.06em; text-transform:uppercase;
-  padding:3px 7px; border-radius:4px; font-weight:700;
-  pointer-events:none;
-  z-index:2;
-}
+        .text-line {
+            line-height: 1.2;
+            width: 100%;
+        }
 
-.variation-badge{
-  position:absolute; top:8px; right:8px;
-  background: linear-gradient(135deg, var(--c1), var(--c3));
-  color:#fff;
-  font-size:8px; letter-spacing:0.04em; text-transform:uppercase;
-  padding:3px 7px; border-radius:4px; font-weight:700;
-  pointer-events:none;
-  z-index:2;
-}
+        /* Enhanced Typography Multi-Layer Visual Style Hierarchy Settings */
+        .placeholder-highlight {
+            font-family: inherit;
+            color: inherit;
+        }
+        .alt-font-active .placeholder-highlight {
+            font-family: 'Shrikhand', cursive !important;
+            text-transform: none !important;
+        }
 
-/* ============================================================
-   DESIGN CANVAS (actual render area)
-   ============================================================ */
-.design-canvas{
-  width:4500px; height:5400px; transform-origin: top left;
-  display:flex; align-items:center; justify-content:center; padding:0 6%;
-  position:relative;
-}
-.design-text{
-  width:100%;
-  word-wrap:break-word;
-  white-space:pre-wrap;
-  position:relative;
-  z-index:2;
-}
+        .card-actions {
+            padding: 12px;
+            border-top: 1px solid var(--border-color);
+            background: #FFFFFF;
+            display: flex;
+            gap: 8px;
+        }
 
-/* Text Effects */
-.text-outline{
-  -webkit-text-stroke: 8px currentColor;
-  paint-order: stroke fill;
-  color: transparent !important;
-}
-.text-shadow{
-  text-shadow: 8px 8px 0 rgba(0,0,0,0.3), 16px 16px 0 rgba(0,0,0,0.15);
-}
-.text-3d{
-  text-shadow:
-    2px 2px 0 rgba(0,0,0,0.2),
-    4px 4px 0 rgba(0,0,0,0.18),
-    6px 6px 0 rgba(0,0,0,0.16),
-    8px 8px 0 rgba(0,0,0,0.14),
-    10px 10px 0 rgba(0,0,0,0.12);
-}
-.text-glow{
-  text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 80px currentColor;
-}
+        .card-actions button {
+            flex: 1;
+            padding: 8px;
+            font-family: inherit;
+            font-size: 11px;
+            border: 1px solid var(--border-color);
+            background: #FFFFFF;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .card-actions button:hover { background: var(--hover-bg); }
 
-/* SVG Graphic Element overlays */
-.design-graphic{
-  position:absolute;
-  z-index:1;
-  pointer-events:none;
-}
-.design-graphic.above{ top:6%; left:50%; transform:translateX(-50%); }
-.design-graphic.below{ bottom:6%; left:50%; transform:translateX(-50%); }
-.design-graphic.wrap{
-  inset:5%;
-  display:flex; align-items:center; justify-content:center;
-}
+        /* Visual Progress Loader Overlay */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 9999;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-action);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ============================================================
-   CARD FOOTER
-   ============================================================ */
-.card-footer{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:8px 12px;
-  border-top:1px solid var(--border);
-  gap:6px;
-}
-.card-label{
-  font-size:10px;
-  color:var(--muted);
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  max-width:50%;
-}
-.card-actions{ display:flex; gap:4px; }
-
-/* ============================================================
-   EMPTY STATE
-   ============================================================ */
-.empty-state{
-  color:var(--muted);
-  font-size:13px;
-  border:1px dashed var(--border2);
-  border-radius: var(--radius-lg);
-  padding:60px 30px;
-  text-align:center;
-  background: var(--bg2);
-}
-.empty-state-icon{
-  font-size:48px;
-  margin-bottom:12px;
-  opacity:0.3;
-}
-.empty-state-title{
-  font-family:'Plus Jakarta Sans',sans-serif;
-  font-size:16px;
-  font-weight:700;
-  color:var(--text);
-  margin-bottom:6px;
-}
-
-/* ============================================================
-   MODAL
-   ============================================================ */
-.modal-overlay{
-  position:fixed; inset:0;
-  background:rgba(7,9,15,0.92);
-  backdrop-filter:blur(8px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:1000;
-  padding:40px;
-}
-.modal-overlay.open{ display:flex; }
-
-.modal-shell{
-  display:flex; gap:20px;
-  max-width:1000px; max-height:90vh; width:100%;
-}
-.modal-content{
-  background: var(--bg2);
-  border:1px solid var(--border2);
-  border-radius: var(--radius-lg);
-  overflow:hidden;
-  flex-shrink:0;
-}
-.modal-content .card-thumb-wrap{ width:420px; aspect-ratio:4500/5400; }
-
-.modal-editor{
-  background: var(--bg2);
-  border:1px solid var(--border2);
-  border-radius: var(--radius-lg);
-  padding:20px;
-  width:280px;
-  flex-shrink:0;
-  overflow-y:auto;
-}
-.modal-editor .panel-header{ margin-bottom:10px; }
-
-.modal-close{
-  position:absolute; top:20px; right:20px;
-  background: var(--bg3);
-  border:1px solid var(--border2);
-  border-radius:8px;
-  width:36px;height:36px;
-  font-size:18px;
-  color:var(--text);
-  z-index:1001;
-  display:flex; align-items:center; justify-content:center;
-}
-.modal-close:hover{
-  background:var(--bg4);
-  border-color:var(--red);
-  color:var(--red);
-}
-
-/* ============================================================
-   GRAPHIC ELEMENTS PICKER
-   ============================================================ */
-.graphic-picker{
-  display:grid;
-  grid-template-columns: repeat(3,1fr);
-  gap:5px;
-  margin-top:6px;
-}
-.graphic-option{
-  border:1px solid var(--border2);
-  border-radius:6px;
-  padding:6px;
-  cursor:pointer;
-  background:var(--bg3);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  aspect-ratio:1;
-  transition: all var(--transition);
-}
-.graphic-option:hover{
-  border-color:var(--c1);
-  background:var(--bg4);
-}
-.graphic-option.active{
-  border-color:var(--c1);
-  background: rgba(99,102,241,0.15);
-  box-shadow: 0 0 12px var(--glow1);
-}
-.graphic-option svg{ width:80%; height:80%; }
-
-/* ============================================================
-   SHIRT COLOR PICKER
-   ============================================================ */
-.shirt-colors{
-  display:flex; gap:5px; margin-top:6px; flex-wrap:wrap;
-}
-.shirt-color{
-  width:24px; height:24px;
-  border-radius:6px;
-  cursor:pointer;
-  border:2px solid transparent;
-  transition: all var(--transition);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
-}
-.shirt-color:hover{ transform:scale(1.15); }
-.shirt-color.active{
-  box-shadow: 0 0 0 2px var(--c1);
-}
-
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
-@media (max-width: 1100px){
-  .app{
-    grid-template-columns: 1fr;
-    grid-template-rows: 56px auto auto 1fr;
-    height: auto;
-    min-height: 100vh;
-    overflow: auto;
-  }
-  body{ overflow:auto; }
-  .panel{ border-right:none; border-bottom:1px solid var(--border); }
-  .modal-shell{ flex-direction:column; }
-  .modal-content .card-thumb-wrap{ width:100%; }
-  .modal-editor{ width:100%; }
-}
-
-/* ============================================================
-   KEYFRAMES
-   ============================================================ */
-@keyframes glow{
-  0%,100%{ box-shadow: 0 0 30px var(--glow1); }
-  50%{ box-shadow: 0 0 60px var(--glow1), 0 0 100px var(--glow2); }
-}
-@keyframes fadeUp{
-  from{ opacity:0; transform:translateY(20px); }
-  to{ opacity:1; transform:translateY(0); }
-}
-@keyframes pulse{
-  0%,100%{ opacity:1; }
-  50%{ opacity:0.6; }
-}
-.generating-pulse{
-  animation: pulse 0.8s ease infinite;
-}
-
-/* ============================================================
-   STATUS TOAST
-   ============================================================ */
-.toast{
-  position:fixed;
-  bottom:24px;
-  right:24px;
-  background:var(--bg3);
-  border:1px solid var(--border2);
-  border-radius:var(--radius);
-  padding:10px 16px;
-  font-size:12px;
-  color:var(--text);
-  z-index:2000;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.4);
-  animation: fadeUp 0.3s ease;
-  transition: opacity 0.3s ease;
-}
-.toast.success{ border-color:var(--green); }
-.toast.error{ border-color:var(--red); }
-.toast-icon{ font-size:16px; }
-  /* --- TREND HIJACKER MODAL --- */
-  .modal-backdrop {
-    position: fixed; top:0; left:0; width:100%; height:100%;
-    background: rgba(4,6,10,0.8); backdrop-filter: blur(8px);
-    z-index: 1000; display: none; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity 0.3s ease;
-  }
-  .modal-backdrop.show { opacity: 1; display: flex; }
-  .modal-content {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; width: 480px; max-width: 90%;
-    padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative; overflow: hidden;
-  }
-  .modal-backdrop.show .modal-content { transform: translateY(0); }
-  .modal-content::before {
-    content:''; position:absolute; top:0; left:0; width:100%; height:4px;
-    background: var(--gradient-primary);
-  }
-  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-  .modal-title { font-size: 20px; font-weight: 700; color: #fff; display:flex; align-items:center; gap:8px;}
-  .close-modal { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
-  .close-modal:hover { color: #fff; }
-  .trend-select {
-    width: 100%; padding: 12px; margin-bottom: 16px;
-    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-    border-radius: 8px; color: #fff; font-family: inherit; font-size: 14px;
-  }
-  .trend-select:focus { border-color: var(--primary); outline: none; }
-  .trend-links { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
-  .trend-link {
-    font-size: 12px; color: var(--primary); text-decoration: none;
-    padding: 6px 10px; background: rgba(99,102,241,0.1); border-radius: 4px;
-    transition: 0.2s; display:flex; align-items:center; gap:4px;
-  }
-  .trend-link:hover { background: rgba(99,102,241,0.2); }
-</style>
+        /* Modal Preview Window Overlay */
+        .modal {
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+        }
+        .modal-content {
+            width: 500px;
+            background: #FFF;
+            padding: 12px;
+            border-radius: 4px;
+            position: relative;
+        }
+    </style>
 </head>
 <body>
 
-<div class="app">
+    <header>
+        <h1>Claude Design Print-On-Demand Toolkit</h1>
+        <div style="font-size: 11px; color: var(--text-muted)">Studio Matrix Utility v2.1</div>
+    </header>
 
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="topbar-brand">
-      <div class="topbar-logo">P</div>
-      <span class="topbar-title">POD Design Studio</span>
-      <span class="topbar-subtitle">T-Shirt Design Generator</span>
-    </div>
-    <div class="topbar-actions">
-      <button class="btn-ghost btn-small" id="clearAllBtn" title="Clear all designs">Clear All</button>
-      <button class="btn-accent" id="uploadPrintfulBtn" style="width:auto; padding:7px 14px; background: #E52E2E; color:white; border:none; box-shadow:none;">
-        ☁️ Upload to Printful
-      </button>
-      <button class="btn-primary" id="downloadAllBtn" style="width:auto; padding:7px 14px;">
-        ⬇ Download All (ZIP)
-      </button>
-    </div>
-  </div>
+    <div class="workspace">
+        <!-- Panel 1: Template Builder & Automated Trend Hijacker -->
+        <div class="panel">
+            <h2>Template Builder</h2>
+            <div class="group">
+                <label>Saved Templates</label>
+                <div class="chips" id="templateChips"></div>
+                <button class="secondary" style="margin-top:0; background:#FFF; color:#0A0A0A; border:1px solid #0A0A0A" onclick="saveCurrentTemplate()">Save Structural Blueprint</button>
+            </div>
 
-  <!-- LEFT PANEL: Template Builder -->
-  <div class="panel" id="panelTemplates">
-    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
-      <span>📝 Template Builder</span>
-      <button class="btn-accent btn-small" id="openTrendHijackerBtn" style="padding: 4px 10px; font-size: 12px; background:var(--gradient-primary); border:none;">🔥 Trend Hijacker</button>
-    </div>
+            <div class="group">
+                <label>Design Text Layout Base</label>
+                <input type="text" id="templateInput" value="{hobby} is my cardio">
+            </div>
 
-    <div class="chips" id="templateChips"></div>
+            <!-- Trend Hijacker Engine Dropdown Matrix Activation Module -->
+            <div class="group" style="background: #FAFAFA; padding: 12px; border-radius: 4px; border: 1px dashed var(--border-color)">
+                <label style="color: var(--accent-action); font-weight:700">⚡ Trend Hijacker Automation</label>
+                <select id="hijackSelector" onchange="injectTrendVariables()">
+                    <option value="">-- Inject Pre-Verified Niche Keywords --</option>
+                    <option value="runners">High-Volume: Local Run Club Satire</option>
+                    <option value="corporate">High-Volume: Corporate Workplace / Gifting</option>
+                    <option value="dogs">High-Volume: Breed-Specific Behavior Traits</option>
+                </select>
+                <div style="font-size:10px; color: var(--text-muted); margin-top: 4px">Instantly load search-backed lists without manual brainstorming.</div>
+            </div>
 
-    <label class="field-label">Template phrase</label>
-    <input type="text" id="templateInput" placeholder="{hobby} is my cardio">
+            <div class="group">
+                <label>Bulk Variations Array (One Per Line / CSV Parsing Mode)</label>
+                <textarea id="bulkValues" placeholder="Pumping Iron&#10;Running&#10;Shopping&#10;Weightlifting"></textarea>
+            </div>
 
-    <label class="field-label">Bulk values (one per line)</label>
-    <textarea id="bulkValues" placeholder="knitting&#10;running&#10;tequila"></textarea>
-    <div class="hint">Use {placeholders}. CSV supported for multi-placeholder templates.</div>
-
-    <div style="margin-top:10px; display:flex; gap:6px;">
-      <button class="btn-ghost btn-small" id="saveTemplateBtn">💾 Save Template</button>
-    </div>
-
-    <hr class="div">
-
-    <div class="panel-header">🎨 Style Presets</div>
-    <div class="presets-grid" id="presetsGrid"></div>
-
-    <hr class="div">
-
-    <div class="toggle-row">
-      <label class="field-label">Generate variations</label>
-      <div class="switch on" id="variationsToggle"></div>
-    </div>
-    <div class="hint">Auto-generates font/color/layout combos per phrase.</div>
-
-    <div style="margin-top:14px;">
-      <button class="btn-accent" id="generateBtn">⚡ Generate Designs</button>
-    </div>
-  </div>
-
-  <!-- MIDDLE PANEL: Design Controls -->
-  <div class="panel" id="panelControls">
-    <div class="panel-header">⚙️ Design Controls</div>
-
-    <label class="field-label">Font</label>
-    <select id="fontSelect"></select>
-
-    <label class="field-label">Text color</label>
-    <div class="color-row">
-      <input type="color" id="colorPicker" value="#FFFFFF">
-      <span class="slider-val" id="colorHexLabel">#FFFFFF</span>
-    </div>
-    <div class="swatches" id="colorSwatches"></div>
-
-    <label class="field-label">Text effect</label>
-    <div class="seg" id="effectSeg">
-      <button data-val="none" class="active">None</button>
-      <button data-val="outline">Outline</button>
-      <button data-val="shadow">Shadow</button>
-      <button data-val="3d">3D</button>
-      <button data-val="glow">Glow</button>
-    </div>
-
-    <label class="field-label">Text alignment</label>
-    <div class="seg" id="alignSeg">
-      <button data-val="left">Left</button>
-      <button data-val="center" class="active">Center</button>
-      <button data-val="right">Right</button>
-    </div>
-
-    <label class="field-label">Line break mode</label>
-    <div class="seg" id="lineBreakSeg">
-      <button data-val="single" class="active">Single</button>
-      <button data-val="word">Word/line</button>
-      <button data-val="two">Two-line</button>
-    </div>
-
-    <label class="field-label">Text transform</label>
-    <div class="seg" id="transformSeg">
-      <button data-val="none" class="active">None</button>
-      <button data-val="upper">UPPER</button>
-      <button data-val="lower">lower</button>
-      <button data-val="title">Title</button>
-    </div>
-
-    <label class="field-label">
-      <div class="slider-row"><span>Letter spacing</span><span class="slider-val" id="letterSpacingVal">0px</span></div>
-    </label>
-    <input type="range" id="letterSpacing" min="-2" max="10" step="0.5" value="0">
-
-    <label class="field-label">
-      <div class="slider-row"><span>Max text width</span><span class="slider-val" id="maxWidthVal">88%</span></div>
-    </label>
-    <input type="range" id="maxWidth" min="40" max="100" step="1" value="88">
-
-    <div class="toggle-row">
-      <label class="field-label">Auto-fit font size</label>
-      <div class="switch on" id="autoFitToggle"></div>
-    </div>
-    <div class="hint">Shrinks each design to fit the canvas.</div>
-
-    <label class="field-label">
-      <div class="slider-row"><span id="fontSizeLabel">Max font size</span><span class="slider-val" id="fontSizeVal">420px</span></div>
-    </label>
-    <input type="range" id="fontSize" min="60" max="900" step="5" value="420">
-
-    <hr class="div">
-
-    <div class="panel-header">👕 Mockup & Graphics</div>
-
-    <label class="field-label">Preview mode</label>
-    <div class="seg" id="previewModeSeg">
-      <button data-val="flat" class="active">Flat</button>
-      <button data-val="mockup">T-Shirt</button>
-    </div>
-
-    <label class="field-label">Background / Shirt preview</label>
-    <select id="bgSelect">
-      <option value="transparent">Transparent</option>
-      <option value="white">White</option>
-      <option value="black">Black</option>
-      <option value="grey">Heather Grey</option>
-    </select>
-
-    <label class="field-label">Shirt color (mockup mode)</label>
-    <div class="shirt-colors" id="shirtColors"></div>
-
-    <label class="field-label">Graphic element</label>
-    <div class="graphic-picker" id="graphicPicker"></div>
-  </div>
-
-  <!-- RIGHT PANEL: Preview Grid -->
-  <div class="panel" id="panelPreview">
-    <div class="preview-toolbar">
-      <div class="preview-toolbar-left">
-        <div>
-          <div class="panel-header" style="margin-bottom:2px;">Preview</div>
-          <div class="preview-count" id="previewCount">0 designs</div>
+            <button class="primary" onclick="generateGrid()">Generate Variations Preview</button>
         </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn-ghost btn-small" id="selectAllBtn">Select All</button>
-      </div>
-    </div>
 
-    <div class="grid" id="previewGrid">
-      <div class="empty-state" style="grid-column:1/-1;">
-        <div class="empty-state-icon">👕</div>
-        <div class="empty-state-title">No designs yet</div>
-        Build a template, add values, pick a style, and hit Generate.
-      </div>
-    </div>
-  </div>
+        <!-- Panel 2: Enhanced Visual Canvas Controls -->
+        <div class="panel">
+            <h2>Design Controls</h2>
+            
+            <div class="group">
+                <label>Primary Typography Face</label>
+                <select id="fontFamily" onchange="updateLiveStyle()">
+                    <option value="Anton" style="font-family:'Anton'">Anton (heavy display)</option>
+                    <option value="Bebas Neue" style="font-family:'Bebas Neue'" selected>Bebas Neue (bold condensed)</option>
+                    <option value="Archivo Black" style="font-family:'Archivo Black'">Archivo Black (bold sans)</option>
+                    <option value="Bungee" style="font-family:'Bungee'">Bungee (athletic display)</option>
+                    <option value="Playfair Display" style="font-family:'Playfair Display'">Playfair Display (elegant serif)</option>
+                    <option value="DM Serif Display" style="font-family:'DM Serif Display'">DM Serif Display (modern serif)</option>
+                    <option value="Abril Fatface" style="font-family:'Abril Fatface'">Abril Fatface (retro serif)</option>
+                    <option value="Fraunces" style="font-family:'Fraunces'">Fraunces (editorial serif)</option>
+                    <option value="Space Grotesk" style="font-family:'Space Grotesk'">Space Grotesk (modern geometric)</option>
+                    <option value="Caveat" style="font-family:'Caveat'">Caveat (script)</option>
+                    <option value="Permanent Marker" style="font-family:'Permanent Marker'">Permanent Marker (handwritten)</option>
+                    <option value="Shrikhand" style="font-family:'Shrikhand'">Shrikhand (chunky retro)</option>
+                </select>
+            </div>
 
-</div>
+            <!-- Enhanced Typography Design Engine Setting Matrix Upgrade -->
+            <div class="group">
+                <label>Visual Contrast Engine (Dual-Font Hierarchy Layout)</label>
+                <div class="segmented">
+                    <button id="altFontFalse" class="active" onclick="toggleAltFont(false)">Uniform Style</button>
+                    <button id="altFontTrue" onclick="toggleAltFont(true)">Isolate & Style {Value}</button>
+                </div>
+            </div>
 
-<!-- Modal: enlarge + per-card override editor -->
-<div class="modal-overlay" id="modalOverlay">
-  <button class="modal-close" id="modalCloseBtn">&times;</button>
-  <div class="modal-shell">
-    <div class="modal-content" id="modalContent"></div>
-    <div class="modal-editor" id="modalEditor"></div>
-  </div>
-</div>
+            <div class="group">
+                <label>Text Color</label>
+                <input type="text" id="textColorHex" value="#0A0A0A" oninput="updateLiveStyle()" style="margin-bottom: 6px">
+                <div class="color-presets">
+                    <div class="swatch" style="background:#0A0A0A" onclick="setPresetColor('#0A0A0A')"></div>
+                    <div class="swatch" style="background:#FFFFFF" onclick="setPresetColor('#FFFFFF')"></div>
+                    <div class="swatch" style="background:#F5E6D3" onclick="setPresetColor('#F5E6D3')"></div>
+                    <div class="swatch" style="background:#C5573A" onclick="setPresetColor('#C5573A')"></div>
+                    <div class="swatch" style="background:#7A8B6F" onclick="setPresetColor('#7A8B6F')"></div>
+                    <div class="swatch" style="background:#1F2D4F" onclick="setPresetColor('#1F2D4F')"></div>
+                    <div class="swatch" style="background:#D4A017" onclick="setPresetColor('#D4A017')"></div>
+                </div>
+            </div>
 
-<div id="renderRoot" style="position:fixed; top:-99999px; left:-99999px;"></div>
+            <div class="group">
+                <label>Canvas Text Sizing</label>
+                <div class="slider-container">
+                    <input type="range" id="fontSizeSlider" min="150" max="650" value="380" oninput="updateLiveStyle()">
+                    <span class="slider-val" id="fontSizeVal">380px</span>
+                </div>
+            </div>
 
-<!-- TREND HIJACKER MODAL -->
-<div class="modal-backdrop" id="trendModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title">🔥 Trend Hijacker Engine</div>
-      <button class="close-modal" id="closeTrendModal">&times;</button>
-    </div>
-    <div style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5;">
-      Instantly generate highly-profitable, ready-to-sell t-shirt designs based on evergreen POD trends and niches.
-    </div>
+            <div class="group">
+                <label>Letter Tracking</label>
+                <div class="slider-container">
+                    <input type="range" id="letterSpacingSlider" min="-2" max="30" value="2" oninput="updateLiveStyle()">
+                    <span class="slider-val" id="letterSpacingVal">2px</span>
+                </div>
+            </div>
 
-    <label class="field-label">1. Choose a Niche (or Surprise Me)</label>
-    <select class="trend-select" id="trendNicheSelect">
-      <option value="random">🎲 Surprise Me (Random Niches)</option>
-      <option value="teachers">🍎 Teachers & Educators</option>
-      <option value="nurses">💉 Nurses & Medical</option>
-      <option value="gym">🏋️ Gym & Fitness</option>
-      <option value="introverts">🛋️ Introverts & Sarcasm</option>
-      <option value="pets">🐶 Pet Parents</option>
-      <option value="tech">💻 Tech & Coding</option>
-    </select>
+            <div class="group">
+                <label>Max Bound Print Boundary Width Target (%)</label>
+                <div class="slider-container">
+                    <input type="range" id="maxWidthSlider" min="40" max="100" value="85" oninput="updateLiveStyle()">
+                    <span class="slider-val" id="maxWidthVal">85%</span>
+                </div>
+            </div>
 
-    <label class="field-label">2. Choose a Meme Format</label>
-    <select class="trend-select" id="trendFormatSelect">
-      <option value="random">🎲 Random Mashup</option>
-      <option value="era">In my {niche} Era</option>
-      <option value="okayest">World's Okayest {niche}</option>
-      <option value="coffee">I run on Coffee and {niche} things</option>
-      <option value="powered">Powered by iced coffee and {niche} chaos</option>
-      <option value="justa">Just a {niche} trying to survive</option>
-    </select>
+            <div class="group">
+                <label>Layout Text Alignment</label>
+                <div class="segmented" id="alignSegment">
+                    <button class="active" onclick="setTextAlign('center')">Center</button>
+                    <button onclick="setTextAlign('left')">Left</button>
+                    <button onclick="setTextAlign('right')">Right</button>
+                </div>
+            </div>
 
-    <button class="btn-primary" id="applyTrendsBtn" style="width:100%; font-size:16px; margin-top:10px;">
-      ⚡ Hijack Trends & Apply
-    </button>
+            <div class="group">
+                <label>Text Transformation Matrix Case</label>
+                <div class="segmented" id="transformSegment">
+                    <button class="active" onclick="setTextTransform('uppercase')">UPPER</button>
+                    <button onclick="setTextTransform('none')">As Typed</button>
+                    <button onclick="setTextTransform('capitalize')">Title</button>
+                </div>
+            </div>
 
-    <div class="trend-links">
-      <span style="font-size:12px; color:var(--text-muted); width:100%; margin-bottom:4px;">Live Research Links:</span>
-      <a href="https://trends.google.com/trends/explore?geo=US&q=shirt" target="_blank" class="trend-link">📈 Google Trends</a>
-      <a href="https://trends.pinterest.com/" target="_blank" class="trend-link">📌 Pinterest Trends</a>
-      <a href="https://www.etsy.com/search?q=funny%20tshirt" target="_blank" class="trend-link">🛍️ Etsy Popular</a>
-    </div>
-  </div>
-</div>
-<script>
-(function(){
-
-  // ======================================================================
-  //  DATA — Fonts, Colors, Presets, SVG Graphics
-  // ======================================================================
-  const FONTS = [
-    {name:'Metal Mania',      family:"'Metal Mania', cursive"},
-    {name:'Pirata One',       family:"'Pirata One', cursive"},
-    {name:'Rye',              family:"'Rye', cursive"},
-    {name:'Creepster',        family:"'Creepster', cursive"},
-    {name:'Special Elite',    family:"'Special Elite', cursive"},
-    {name:'Cinzel Decorative',family:"'Cinzel Decorative', serif"},
-    {name:'Anton',            family:"'Anton', sans-serif"},
-    {name:'Bebas Neue',       family:"'Bebas Neue', sans-serif"},
-    {name:'Archivo Black',    family:"'Archivo Black', sans-serif"},
-    {name:'Bungee',           family:"'Bungee', sans-serif"},
-    {name:'Oswald',           family:"'Oswald', sans-serif"},
-    {name:'Bangers',          family:"'Bangers', cursive"},
-    {name:'Righteous',        family:"'Righteous', sans-serif"},
-    {name:'Playfair Display', family:"'Playfair Display', serif"},
-    {name:'DM Serif Display', family:"'DM Serif Display', serif"},
-    {name:'Abril Fatface',    family:"'Abril Fatface', serif"},
-    {name:'Fraunces',         family:"'Fraunces', serif"},
-    {name:'Space Grotesk',    family:"'Space Grotesk', sans-serif"},
-    {name:'Caveat',           family:"'Caveat', cursive"},
-    {name:'Permanent Marker', family:"'Permanent Marker', cursive"},
-    {name:'Shrikhand',        family:"'Shrikhand', cursive"},
-    {name:'Fredoka One',      family:"'Fredoka One', cursive"},
-  ];
-
-  const COLOR_PRESETS = [
-    {name:'White',      hex:'#FFFFFF'},
-    {name:'Black',      hex:'#000000'},
-    {name:'Cream',      hex:'#F5E6D3'},
-    {name:'Terracotta', hex:'#C5573A'},
-    {name:'Sage',       hex:'#7A8B6F'},
-    {name:'Navy',       hex:'#1F2D4F'},
-    {name:'Mustard',    hex:'#D4A017'},
-    {name:'Coral',      hex:'#FF6B6B'},
-    {name:'Teal',       hex:'#2DD4BF'},
-    {name:'Lavender',   hex:'#A78BFA'},
-    {name:'Hot Pink',   hex:'#EC4899'},
-    {name:'Lime',       hex:'#84CC16'},
-  ];
-
-  const SHIRT_COLORS = [
-    {name:'White',        hex:'#FFFFFF'},
-    {name:'Black',        hex:'#1a1a1a'},
-    {name:'Heather Grey', hex:'#9b9b9b'},
-    {name:'Navy',         hex:'#1F2D4F'},
-    {name:'Maroon',       hex:'#800020'},
-    {name:'Forest Green', hex:'#228B22'},
-    {name:'Royal Blue',   hex:'#4169E1'},
-    {name:'Red',          hex:'#CC0000'},
-  ];
-
-  const STYLE_PRESETS = [
-    {
-      name:'Gothic Metal', icon:'💀',
-      font: FONTS[0].family, fontName: FONTS[0].name,
-      color:'#ef4444', transform:'upper', lineBreak:'single', letterSpacing:1, effect:'shadow',
-      graphic:'skull'
-    },
-    {
-      name:'Rebel Eagle', icon:'🦅',
-      font: FONTS[1].family, fontName: FONTS[1].name,
-      color:'#F5E6D3', transform:'upper', lineBreak:'two', letterSpacing:2, effect:'3d',
-      graphic:'eagle'
-    },
-    {
-      name:'Outlaw Wild', icon:'⚡',
-      font: FONTS[2].family, fontName: FONTS[2].name,
-      color:'#D4A017', transform:'upper', lineBreak:'single', letterSpacing:3, effect:'outline',
-      graphic:'lightning'
-    },
-    {
-      name:'Cyber Edge', icon:'🔥',
-      font: FONTS[3].family, fontName: FONTS[3].name,
-      color:'#EC4899', transform:'upper', lineBreak:'single', letterSpacing:0, effect:'glow',
-      graphic:'flame'
-    },
-    {
-      name:'Bold Statement', icon:'💥',
-      font: FONTS[6].family, fontName: FONTS[6].name,
-      color:'#FFFFFF', transform:'upper', lineBreak:'word', letterSpacing:2, effect:'none',
-      graphic:'none'
-    },
-    {
-      name:'Retro', icon:'🕹️',
-      font: FONTS[7].family, fontName: FONTS[7].name,
-      color:'#F5E6D3', transform:'upper', lineBreak:'single', letterSpacing:3, effect:'shadow',
-      graphic:'arch-above'
-    },
-    {
-      name:'Minimalist', icon:'🤍',
-      font: FONTS[17].family, fontName: FONTS[17].name,
-      color:'#000000', transform:'lower', lineBreak:'single', letterSpacing:4, effect:'none',
-      graphic:'none'
-    },
-    {
-      name:'Vintage Laurel', icon:'📜',
-      font: FONTS[13].family, fontName: FONTS[13].name,
-      color:'#1F2D4F', transform:'title', lineBreak:'two', letterSpacing:1, effect:'none',
-      graphic:'laurel'
-    },
-  ];
-
-  // SVG graphic elements (inline SVG strings)
-  const GRAPHIC_ELEMENTS = {
-    'none': { name:'None', svg:'' },
-    'skull': {
-      name:'Skull',
-      svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 15 C30 15 20 28 20 45 C20 58 26 68 34 72 L34 85 C34 88 38 90 42 90 L58 90 C62 90 66 88 66 85 L66 72 C74 68 80 58 80 45 C80 28 70 15 50 15 Z" stroke="currentColor" stroke-width="4" fill="none" stroke-linejoin="round"/>
-        <circle cx="38" cy="48" r="8" fill="currentColor"/>
-        <circle cx="62" cy="48" r="8" fill="currentColor"/>
-        <path d="M47 62 L53 62 L50 56 Z" fill="currentColor"/>
-        <path d="M42 78 L42 85 M50 78 L50 85 M58 78 L58 85" stroke="currentColor" stroke-width="3"/>
-      </svg>`,
-      placement:'below',
-      width:'30%'
-    },
-    'eagle': {
-      name:'Eagle',
-      svg: `<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 20 C35 15 50 35 60 45 C70 35 85 15 110 20 C85 28 70 42 66 52 L60 48 L54 52 C50 42 35 28 10 20 Z" fill="currentColor"/>
-        <path d="M60 45 L57 58 C57 59 58 60 60 59 L63 58 Z" fill="currentColor"/>
-      </svg>`,
-      placement:'above',
-      width:'35%'
-    },
-    'lightning': {
-      name:'Lightning',
-      svg: `<svg viewBox="0 0 60 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M35 5 L10 50 L28 50 L15 95 L50 40 L30 40 Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round" fill="none"/>
-      </svg>`,
-      placement:'above',
-      width:'18%'
-    },
-    'flame': {
-      name:'Flame',
-      svg: `<svg viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M40 90 C60 90 70 70 70 50 C70 15 45 5 45 5 C45 5 55 25 40 45 C25 65 35 5 20 25 C10 40 10 65 10 75 C10 85 25 90 40 90 Z" stroke="currentColor" stroke-width="4" fill="none" stroke-linejoin="round"/>
-      </svg>`,
-      placement:'below',
-      width:'25%'
-    },
-    'arch-above': {
-      name:'Arch',
-      svg: `<svg viewBox="0 0 600 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 90 Q300 -20 550 90" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
-      </svg>`,
-      placement:'above',
-      width:'60%'
-    },
-    'underline': {
-      name:'Underline',
-      svg: `<svg viewBox="0 0 600 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M30 20 Q150 35 300 20 Q450 5 570 20" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round"/>
-      </svg>`,
-      placement:'below',
-      width:'55%'
-    },
-    'stars': {
-      name:'Stars',
-      svg: `<svg viewBox="0 0 600 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <text x="150" y="55" font-size="40" fill="currentColor">★ ★ ★ ★ ★</text>
-      </svg>`,
-      placement:'below',
-      width:'50%'
-    },
-    'laurel': {
-      name:'Laurel',
-      svg: `<svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M100 400 Q60 300 80 200 Q100 100 150 50" stroke="currentColor" stroke-width="4" fill="none"/>
-        <path d="M80 350 Q50 320 70 280" stroke="currentColor" stroke-width="3" fill="none"/>
-        <path d="M75 300 Q45 270 65 230" stroke="currentColor" stroke-width="3" fill="none"/>
-        <path d="M80 250 Q50 220 75 180" stroke="currentColor" stroke-width="3" fill="none"/>
-        <path d="M90 200 Q65 170 90 130" stroke="currentColor" stroke-width="3" fill="none"/>
-        <path d="M105 155 Q85 125 110 90" stroke="currentColor" stroke-width="3" fill="none"/>
-        <path d="M400 400 Q440 300 420 200 Q400 100 350 50" stroke="currentColor" stroke-width="4" fill="none"/>
-        <path d="M420 350 Q450 320 430 280" stroke="currentColor" stroke-width="3" fill="none"/>
-        <path d="M425 300 Q455 270 435 230" stroke="currentColor" stroke-width="3" fill="none"/>
-        <path d="M420 250 Q450 220 425 180" stroke="currentColor" stroke-width="3" fill="none"/>
-        <path d="M410 200 Q435 170 410 130" stroke="currentColor" stroke-width="3" fill="none"/>
-        <path d="M395 155 Q415 125 390 90" stroke="currentColor" stroke-width="3" fill="none"/>
-      </svg>`,
-      placement:'wrap',
-      width:'90%'
-    },
-    'banner': {
-      name:'Banner',
-      svg: `<svg viewBox="0 0 700 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0 30 L50 30 L50 90 L0 60 Z" fill="currentColor" opacity="0.3"/>
-        <rect x="50" y="20" width="600" height="80" rx="4" fill="currentColor" opacity="0.12"/>
-        <path d="M700 30 L650 30 L650 90 L700 60 Z" fill="currentColor" opacity="0.3"/>
-        <line x1="50" y1="20" x2="650" y2="20" stroke="currentColor" stroke-width="3"/>
-        <line x1="50" y1="100" x2="650" y2="100" stroke="currentColor" stroke-width="3"/>
-      </svg>`,
-      placement:'wrap',
-      width:'85%'
-    },
-    'circle-badge': {
-      name:'Circle',
-      svg: `<svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="250" cy="250" r="220" stroke="currentColor" stroke-width="6" fill="none"/>
-        <circle cx="250" cy="250" r="200" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="8 6"/>
-      </svg>`,
-      placement:'wrap',
-      width:'90%'
-    },
-  };
-
-  const SEED_TEMPLATES = [
-    "{hobby} is my cardio",
-    "World's okayest {role}",
-    "Just here for the {noun}",
-    "Property of the {name} family",
-    "I'd rather be {hobby}",
-  ];
-
-  const STORAGE_KEY = 'pod_studio_templates_v2';
-  const CANVAS_W = 4500, CANVAS_H = 5400;
-  const MIN_FONT_SIZE = 60;
-
-  // ======================================================================
-  //  GLOBAL STATE
-  // ======================================================================
-  let state = {
-    template: SEED_TEMPLATES[0],
-    bulkValues: "knitting\nrunning\nbaking\ntequila\nyoga",
-    font: FONTS[0].family,
-    fontName: FONTS[0].name,
-    color: '#FFFFFF',
-    bg: 'transparent',
-    align: 'center',
-    lineBreak: 'single',
-    transform: 'none',
-    letterSpacing: 0,
-    maxWidth: 88,
-    fontSize: 420,
-    autoFit: true,
-    effect: 'none',
-    graphic: 'none',
-    previewMode: 'flat',
-    shirtColor: '#FFFFFF',
-    generateVariations: true,
-    activePreset: null,
-  };
-
-  let designs = [];
-  let fontsLoaded = false;
-
-  // ======================================================================
-  //  HELPERS
-  // ======================================================================
-  function slugify(str){
-    return str.toString().toLowerCase()
-      .replace(/\{|\}/g,'')
-      .replace(/[^a-z0-9]+/g,'-')
-      .replace(/(^-|-$)/g,'')
-      .slice(0,60) || 'design';
-  }
-
-  function applyTransform(text, mode){
-    switch(mode){
-      case 'upper': return text.toUpperCase();
-      case 'lower': return text.toLowerCase();
-      case 'title': return text.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.substr(1).toLowerCase());
-      default: return text;
-    }
-  }
-
-  function applyLineBreak(text, mode){
-    if(mode === 'word') return text.split(' ').join('\n');
-    if(mode === 'two'){
-      const words = text.split(' ');
-      if(words.length < 2) return text;
-      const mid = Math.ceil(words.length/2);
-      return words.slice(0,mid).join(' ') + '\n' + words.slice(mid).join(' ');
-    }
-    return text;
-  }
-
-  function escapeHTML(str){
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
-  function extractPlaceholders(template){
-    const matches = template.match(/\{([^}]+)\}/g) || [];
-    return matches.map(m => m.slice(1,-1));
-  }
-
-  function parseCSVLine(line){
-    const out = [];
-    let cur = '';
-    let inQuotes = false;
-    for(let i = 0; i < line.length; i++){
-      const ch = line[i];
-      if(inQuotes){
-        if(ch === '"'){
-          if(line[i+1] === '"'){ cur += '"'; i++; }
-          else { inQuotes = false; }
-        } else { cur += ch; }
-      } else {
-        if(ch === '"'){ inQuotes = true; }
-        else if(ch === ','){ out.push(cur.trim()); cur = ''; }
-        else { cur += ch; }
-      }
-    }
-    out.push(cur.trim());
-    return out;
-  }
-
-  function parseBulkValues(template, raw){
-    const placeholders = extractPlaceholders(template);
-    const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    if(lines.length === 0) return [];
-
-    if(placeholders.length > 1){
-      const header = parseCSVLine(lines[0]);
-      const rows = lines.slice(1);
-      return rows.map(row => {
-        const cells = parseCSVLine(row);
-        let filled = template;
-        header.forEach((h, i) => {
-          const re = new RegExp('\\{' + h.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\}', 'g');
-          filled = filled.replace(re, cells[i] || '');
-        });
-        return {raw: cells.join(' '), text: filled};
-      });
-    } else if(placeholders.length === 1){
-      const ph = placeholders[0];
-      const re = new RegExp('\\{' + ph.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\}', 'g');
-      return lines.map(v => {
-        const cleaned = parseCSVLine(v)[0] !== undefined && v.startsWith('"') ? parseCSVLine(v)[0] : v;
-        return {raw: cleaned, text: template.replace(re, cleaned)};
-      });
-    } else {
-      return [{raw: template, text: template}];
-    }
-  }
-
-  function effectiveStyle(d){
-    return Object.assign({}, state, d.override || {});
-  }
-
-  function showToast(message, type='success'){
-    const existing = document.querySelector('.toast');
-    if(existing) existing.remove();
-    const t = document.createElement('div');
-    t.className = 'toast ' + type;
-    t.innerHTML = `<span class="toast-icon">${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span> ${escapeHTML(message)}`;
-    document.body.appendChild(t);
-    setTimeout(() => { t.style.opacity='0'; setTimeout(() => t.remove(), 300); }, 3000);
-  }
-
-  // ======================================================================
-  //  AUTO-FIT (binary search for largest fitting font size)
-  // ======================================================================
-  function computeAutoFitSize(text, style){
-    const probe = document.createElement('div');
-    probe.style.position = 'fixed';
-    probe.style.top = '-99999px';
-    probe.style.left = '-99999px';
-    probe.style.width = (CANVAS_W * (style.maxWidth/100)) + 'px';
-    probe.style.fontFamily = style.font;
-    probe.style.textAlign = style.align;
-    probe.style.letterSpacing = style.letterSpacing + 'px';
-    probe.style.lineHeight = '1.05';
-    probe.style.whiteSpace = 'pre-wrap';
-    probe.style.wordWrap = 'break-word';
-    probe.style.visibility = 'hidden';
-    document.body.appendChild(probe);
-
-    const broken = applyLineBreak(applyTransform(text, style.transform), style.lineBreak);
-    probe.innerHTML = broken.split('\n').map(l => escapeHTML(l)).join('<br>');
-
-    const maxAllowedHeight = CANVAS_H * 0.82;
-    let lo = MIN_FONT_SIZE, hi = style.fontSize, best = MIN_FONT_SIZE;
-
-    for(let iter = 0; iter < 20; iter++){
-      const mid = Math.floor((lo + hi) / 2);
-      probe.style.fontSize = mid + 'px';
-      const h = probe.scrollHeight;
-      const w = probe.scrollWidth;
-      if(h <= maxAllowedHeight && w <= CANVAS_W * (style.maxWidth/100) + 2){
-        best = mid;
-        lo = mid + 1;
-      } else {
-        hi = mid - 1;
-      }
-      if(lo > hi) break;
-    }
-
-    document.body.removeChild(probe);
-    return best;
-  }
-
-  // ======================================================================
-  //  BUILD CANVAS (the 4500×5400 design element)
-  // ======================================================================
-  function buildCanvasInner(d){
-    const style = effectiveStyle(d);
-    let fontSize = style.fontSize;
-    if(style.autoFit){
-      fontSize = computeAutoFitSize(d.text, style);
-    }
-
-    const div = document.createElement('div');
-    div.className = 'design-canvas';
-
-    // Graphic element (behind text)
-    const graphicKey = style.graphic || 'none';
-    const graphicDef = GRAPHIC_ELEMENTS[graphicKey];
-    if(graphicDef && graphicDef.svg){
-      const gEl = document.createElement('div');
-      gEl.className = 'design-graphic ' + (graphicDef.placement || 'below');
-      gEl.style.color = style.color;
-      gEl.style.width = graphicDef.width || '50%';
-      if(graphicDef.placement === 'wrap'){
-        gEl.style.position = 'absolute';
-        gEl.style.inset = '5%';
-        gEl.style.width = graphicDef.width || '90%';
-        gEl.style.height = graphicDef.width || '90%';
-        gEl.style.left = '50%';
-        gEl.style.top = '50%';
-        gEl.style.transform = 'translate(-50%,-50%)';
-      }
-      gEl.innerHTML = graphicDef.svg;
-      div.appendChild(gEl);
-    }
-
-    // Text element
-    const span = document.createElement('div');
-    span.className = 'design-text';
-    if(style.effect === 'outline') span.classList.add('text-outline');
-    if(style.effect === 'shadow') span.classList.add('text-shadow');
-    if(style.effect === '3d') span.classList.add('text-3d');
-    if(style.effect === 'glow') span.classList.add('text-glow');
-
-    span.style.fontFamily = style.font;
-    span.style.color = style.color;
-    span.style.textAlign = style.align;
-    span.style.letterSpacing = style.letterSpacing + 'px';
-    span.style.fontSize = fontSize + 'px';
-    span.style.lineHeight = '1.05';
-    span.style.maxWidth = style.maxWidth + '%';
-    span.style.marginLeft = style.align === 'right' ? '0' : 'auto';
-    span.style.marginRight = style.align === 'left' ? '0' : 'auto';
-
-    const broken = applyLineBreak(applyTransform(d.text, style.transform), style.lineBreak);
-    span.innerHTML = broken.split('\n').map(l => escapeHTML(l)).join('<br>');
-    div.appendChild(span);
-    return div;
-  }
-
-  // ======================================================================
-  //  T-SHIRT SVG MOCKUP
-  // ======================================================================
-  function buildTshirtSVG(shirtColor){
-    return `<svg viewBox="0 0 400 480" class="tshirt-svg" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="shirtGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${shirtColor}" stop-opacity="1"/>
-          <stop offset="100%" stop-color="${shirtColor}" stop-opacity="0.85"/>
-        </linearGradient>
-      </defs>
-      <!-- Shirt body -->
-      <path d="M100 80 L60 100 L10 160 L50 180 L80 140 L80 440 L320 440 L320 140 L350 180 L390 160 L340 100 L300 80 L260 100 Q200 130 140 100 Z"
-            fill="url(#shirtGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-      <!-- Collar -->
-      <path d="M140 100 Q200 130 260 100 Q230 115 200 120 Q170 115 140 100 Z"
-            fill="rgba(0,0,0,0.1)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
-      <!-- Left sleeve fold -->
-      <line x1="80" y1="140" x2="80" y2="200" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>
-      <!-- Right sleeve fold -->
-      <line x1="320" y1="140" x2="320" y2="200" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>
-    </svg>`;
-  }
-
-  // ======================================================================
-  //  UI BUILD: Font select
-  // ======================================================================
-  function buildFontSelect(){
-    const sel = document.getElementById('fontSelect');
-    sel.innerHTML = '';
-    FONTS.forEach(f => {
-      const opt = document.createElement('option');
-      opt.value = f.family;
-      opt.dataset.name = f.name;
-      opt.textContent = f.name;
-      opt.style.fontFamily = f.family;
-      opt.className = 'font-option';
-      sel.appendChild(opt);
-    });
-    sel.value = state.font;
-    sel.addEventListener('change', () => {
-      state.font = sel.value;
-      const opt = FONTS.find(f => f.family === sel.value);
-      state.fontName = opt ? opt.name : '';
-      state.activePreset = null;
-      clearPresetHighlights();
-      renderPreviews();
-    });
-  }
-
-  // ======================================================================
-  //  UI BUILD: Color swatches
-  // ======================================================================
-  function buildColorSwatches(){
-    const wrap = document.getElementById('colorSwatches');
-    wrap.innerHTML = '';
-    COLOR_PRESETS.forEach(c => {
-      const sw = document.createElement('div');
-      sw.className = 'swatch' + (c.hex.toLowerCase() === state.color.toLowerCase() ? ' active' : '');
-      sw.style.background = c.hex;
-      sw.title = c.name;
-      sw.addEventListener('click', () => {
-        state.color = c.hex;
-        document.getElementById('colorPicker').value = c.hex;
-        document.getElementById('colorHexLabel').textContent = c.hex.toUpperCase();
-        document.querySelectorAll('#colorSwatches .swatch').forEach(s => s.classList.remove('active'));
-        sw.classList.add('active');
-        state.activePreset = null;
-        clearPresetHighlights();
-        renderPreviews();
-      });
-      wrap.appendChild(sw);
-    });
-  }
-
-  // ======================================================================
-  //  UI BUILD: Shirt color picker
-  // ======================================================================
-  function buildShirtColors(){
-    const wrap = document.getElementById('shirtColors');
-    wrap.innerHTML = '';
-    SHIRT_COLORS.forEach(c => {
-      const el = document.createElement('div');
-      el.className = 'shirt-color' + (c.hex === state.shirtColor ? ' active' : '');
-      el.style.background = c.hex;
-      el.title = c.name;
-      el.addEventListener('click', () => {
-        state.shirtColor = c.hex;
-        wrap.querySelectorAll('.shirt-color').forEach(s => s.classList.remove('active'));
-        el.classList.add('active');
-        renderPreviews();
-      });
-      wrap.appendChild(el);
-    });
-  }
-
-  // ======================================================================
-  //  UI BUILD: Graphic element picker
-  // ======================================================================
-  function buildGraphicPicker(){
-    const wrap = document.getElementById('graphicPicker');
-    wrap.innerHTML = '';
-    Object.entries(GRAPHIC_ELEMENTS).forEach(([key, def]) => {
-      const el = document.createElement('div');
-      el.className = 'graphic-option' + (key === state.graphic ? ' active' : '');
-      el.title = def.name;
-      if(key === 'none'){
-        el.innerHTML = '<span style="font-size:14px;color:var(--muted);">∅</span>';
-      } else {
-        el.innerHTML = `<div style="color:var(--text);width:100%;height:100%;display:flex;align-items:center;justify-content:center;">${def.svg}</div>`;
-      }
-      el.addEventListener('click', () => {
-        state.graphic = key;
-        wrap.querySelectorAll('.graphic-option').forEach(o => o.classList.remove('active'));
-        el.classList.add('active');
-        renderPreviews();
-      });
-      wrap.appendChild(el);
-    });
-  }
-
-  // ======================================================================
-  //  UI BUILD: Style presets
-  // ======================================================================
-  function buildPresets(){
-    const grid = document.getElementById('presetsGrid');
-    grid.innerHTML = '';
-    STYLE_PRESETS.forEach((preset, idx) => {
-      const card = document.createElement('div');
-      card.className = 'preset-card' + (state.activePreset === idx ? ' active' : '');
-      card.dataset.idx = idx;
-      card.innerHTML = `
-        <div class="preset-card-preview" style="font-family:${preset.font}; color:${preset.color}; ${preset.effect==='outline'?'-webkit-text-stroke:1px currentColor;color:transparent;':''}">
-          ${preset.icon}
+            <div class="group">
+                <label>Studio Grid Apparel Background Preview Only (Always Transparent Export)</label>
+                <div class="segmented" id="bgSegment">
+                    <button class="active" onclick="setPreviewBg('transparent')">Transparent</button>
+                    <button onclick="setPreviewBg('white')">White</button>
+                    <button onclick="setPreviewBg('black')">Black</button>
+                    <button onclick="setPreviewBg('grey')">Grey</button>
+                </div>
+            </div>
         </div>
-        <div class="preset-card-name">${escapeHTML(preset.name)}</div>
-      `;
-      card.addEventListener('click', () => applyPreset(idx));
-      grid.appendChild(card);
-    });
-  }
 
-  function applyPreset(idx){
-    const preset = STYLE_PRESETS[idx];
-    state.font = preset.font;
-    state.fontName = preset.fontName;
-    state.color = preset.color;
-    state.transform = preset.transform;
-    state.lineBreak = preset.lineBreak;
-    state.letterSpacing = preset.letterSpacing;
-    state.effect = preset.effect;
-    state.graphic = preset.graphic;
-    state.activePreset = idx;
-
-    // Sync UI controls
-    document.getElementById('fontSelect').value = state.font;
-    document.getElementById('colorPicker').value = state.color;
-    document.getElementById('colorHexLabel').textContent = state.color.toUpperCase();
-    document.getElementById('letterSpacing').value = state.letterSpacing;
-    document.getElementById('letterSpacingVal').textContent = state.letterSpacing + 'px';
-
-    syncSegControl('alignSeg', state.align);
-    syncSegControl('lineBreakSeg', state.lineBreak);
-    syncSegControl('transformSeg', state.transform);
-    syncSegControl('effectSeg', state.effect);
-
-    buildColorSwatches();
-    buildGraphicPicker();
-
-    document.querySelectorAll('.preset-card').forEach(c => {
-      c.classList.toggle('active', parseInt(c.dataset.idx) === idx);
-    });
-
-    renderPreviews();
-    showToast(`Applied "${preset.name}" style`);
-  }
-
-  function clearPresetHighlights(){
-    document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
-  }
-
-  function syncSegControl(id, value){
-    const seg = document.getElementById(id);
-    if(!seg) return;
-    seg.querySelectorAll('button').forEach(b => {
-      b.classList.toggle('active', b.dataset.val === value);
-    });
-  }
-
-  // ======================================================================
-  //  UI BUILD: Segmented controls
-  // ======================================================================
-  function buildSeg(id, key){
-    const seg = document.getElementById(id);
-    seg.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        seg.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state[key] = btn.dataset.val;
-        if(key !== 'previewMode'){
-          state.activePreset = null;
-          clearPresetHighlights();
-        }
-        renderPreviews();
-      });
-    });
-  }
-
-  // ======================================================================
-  //  SETUP ALL CONTROLS
-  // ======================================================================
-  function setupControls(){
-    buildFontSelect();
-    buildColorSwatches();
-    buildShirtColors();
-    buildGraphicPicker();
-    buildPresets();
-
-    document.getElementById('colorPicker').addEventListener('input', (e) => {
-      state.color = e.target.value;
-      document.getElementById('colorHexLabel').textContent = e.target.value.toUpperCase();
-      document.querySelectorAll('#colorSwatches .swatch').forEach(s => s.classList.remove('active'));
-      state.activePreset = null;
-      clearPresetHighlights();
-      renderPreviews();
-    });
-
-    document.getElementById('bgSelect').addEventListener('change', (e) => {
-      state.bg = e.target.value;
-      renderPreviews();
-    });
-
-    buildSeg('alignSeg', 'align');
-    buildSeg('lineBreakSeg', 'lineBreak');
-    buildSeg('transformSeg', 'transform');
-    buildSeg('effectSeg', 'effect');
-    buildSeg('previewModeSeg', 'previewMode');
-
-    const lsSlider = document.getElementById('letterSpacing');
-    lsSlider.addEventListener('input', () => {
-      state.letterSpacing = parseFloat(lsSlider.value);
-      document.getElementById('letterSpacingVal').textContent = state.letterSpacing + 'px';
-      renderPreviews();
-    });
-
-    const mwSlider = document.getElementById('maxWidth');
-    mwSlider.addEventListener('input', () => {
-      state.maxWidth = parseFloat(mwSlider.value);
-      document.getElementById('maxWidthVal').textContent = state.maxWidth + '%';
-      renderPreviews();
-    });
-
-    const fsSlider = document.getElementById('fontSize');
-    fsSlider.addEventListener('input', () => {
-      state.fontSize = parseFloat(fsSlider.value);
-      document.getElementById('fontSizeVal').textContent = state.fontSize + 'px';
-      renderPreviews();
-    });
-
-    const autoFitToggle = document.getElementById('autoFitToggle');
-    autoFitToggle.addEventListener('click', () => {
-      state.autoFit = !state.autoFit;
-      autoFitToggle.classList.toggle('on', state.autoFit);
-      document.getElementById('fontSizeLabel').textContent = state.autoFit ? 'Max font size' : 'Font size';
-      renderPreviews();
-    });
-
-    const variationsToggle = document.getElementById('variationsToggle');
-    variationsToggle.addEventListener('click', () => {
-      state.generateVariations = !state.generateVariations;
-      variationsToggle.classList.toggle('on', state.generateVariations);
-    });
-  }
-
-  // ======================================================================
-  //  TEMPLATES (localStorage)
-  // ======================================================================
-  function loadSavedTemplates(){
-    try{ const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; }
-    catch(e){ return []; }
-  }
-  function saveSavedTemplates(list){
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
-    catch(e){ /* storage unavailable */ }
-  }
-
-  function renderTemplateChips(){
-    const wrap = document.getElementById('templateChips');
-    wrap.innerHTML = '';
-
-    SEED_TEMPLATES.forEach(t => {
-      const chip = document.createElement('div');
-      chip.className = 'chip';
-      chip.innerHTML = `<span>${escapeHTML(t)}</span>`;
-      chip.addEventListener('click', () => {
-        document.getElementById('templateInput').value = t;
-        state.template = t;
-      });
-      wrap.appendChild(chip);
-    });
-
-    const saved = loadSavedTemplates();
-    saved.forEach((entry, idx) => {
-      const chip = document.createElement('div');
-      chip.className = 'chip';
-      chip.innerHTML = `<span>${escapeHTML(entry.template)}</span><span class="x" data-idx="${idx}">&times;</span>`;
-      chip.querySelector('span:first-child').addEventListener('click', () => loadTemplateEntry(entry));
-      chip.querySelector('.x').addEventListener('click', (e) => {
-        e.stopPropagation();
-        const list = loadSavedTemplates();
-        list.splice(idx, 1);
-        saveSavedTemplates(list);
-        renderTemplateChips();
-      });
-      wrap.appendChild(chip);
-    });
-  }
-
-  function loadTemplateEntry(entry){
-    document.getElementById('templateInput').value = entry.template;
-    document.getElementById('bulkValues').value = entry.bulkValues || '';
-    state.template = entry.template;
-    state.bulkValues = entry.bulkValues || '';
-
-    if(entry.design){
-      Object.assign(state, entry.design);
-      document.getElementById('fontSelect').value = state.font;
-      document.getElementById('colorPicker').value = state.color;
-      document.getElementById('colorHexLabel').textContent = state.color.toUpperCase();
-      document.getElementById('bgSelect').value = state.bg;
-      document.getElementById('letterSpacing').value = state.letterSpacing;
-      document.getElementById('letterSpacingVal').textContent = state.letterSpacing + 'px';
-      document.getElementById('maxWidth').value = state.maxWidth;
-      document.getElementById('maxWidthVal').textContent = state.maxWidth + '%';
-      document.getElementById('fontSize').value = state.fontSize;
-      document.getElementById('fontSizeVal').textContent = state.fontSize + 'px';
-      document.getElementById('autoFitToggle').classList.toggle('on', !!state.autoFit);
-      document.getElementById('fontSizeLabel').textContent = state.autoFit ? 'Max font size' : 'Font size';
-
-      syncSegControl('alignSeg', state.align);
-      syncSegControl('lineBreakSeg', state.lineBreak);
-      syncSegControl('transformSeg', state.transform);
-      syncSegControl('effectSeg', state.effect || 'none');
-
-      document.querySelectorAll('#colorSwatches .swatch').forEach(s => s.classList.remove('active'));
-      buildGraphicPicker();
-    }
-
-    generateDesigns();
-  }
-
-  document.getElementById('saveTemplateBtn').addEventListener('click', () => {
-    const template = document.getElementById('templateInput').value.trim();
-    if(!template){ showToast('Enter a template first', 'error'); return; }
-    const bulkValues = document.getElementById('bulkValues').value;
-    const list = loadSavedTemplates();
-    list.push({
-      template, bulkValues,
-      design: {
-        font: state.font, fontName: state.fontName, color: state.color, bg: state.bg,
-        align: state.align, lineBreak: state.lineBreak, transform: state.transform,
-        letterSpacing: state.letterSpacing, maxWidth: state.maxWidth, fontSize: state.fontSize,
-        autoFit: state.autoFit, effect: state.effect, graphic: state.graphic
-      }
-    });
-    saveSavedTemplates(list);
-    renderTemplateChips();
-    showToast('Template saved!');
-  });
-
-  // ======================================================================
-  //  DESIGN VARIATION ENGINE
-  // ======================================================================
-  function generateVariationsForPhrase(baseText, baseSlug){
-    // Pick a few different combos for each phrase
-    const variationDefs = [
-      { fontIdx:0, colorIdx:0, transform:'upper', lineBreak:'word', effect:'none', graphic:'none', label:'Bold Word' },
-      { fontIdx:1, colorIdx:0, transform:'upper', lineBreak:'single', effect:'shadow', graphic:'underline', label:'Shadow' },
-      { fontIdx:7, colorIdx:4, transform:'title', lineBreak:'two', effect:'none', graphic:'laurel', label:'Elegant' },
-      { fontIdx:3, colorIdx:7, transform:'upper', lineBreak:'single', effect:'outline', graphic:'none', label:'Outline' },
-      { fontIdx:14, colorIdx:6, transform:'none', lineBreak:'single', effect:'3d', graphic:'banner', label:'Varsity' },
-    ];
-
-    return variationDefs.map((v, vi) => ({
-      id: 'var_' + vi + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
-      text: baseText,
-      valueSlug: baseSlug + '-v' + (vi+1),
-      isVariation: true,
-      variationLabel: v.label,
-      override: {
-        font: FONTS[v.fontIdx % FONTS.length].family,
-        fontName: FONTS[v.fontIdx % FONTS.length].name,
-        color: COLOR_PRESETS[v.colorIdx % COLOR_PRESETS.length].hex,
-        transform: v.transform,
-        lineBreak: v.lineBreak,
-        effect: v.effect,
-        graphic: v.graphic,
-      }
-    }));
-  }
-
-  // ======================================================================
-  //  GENERATE & RENDER
-  // ======================================================================
-  function generateDesigns(){
-    const template = document.getElementById('templateInput').value.trim();
-    const bulkRaw = document.getElementById('bulkValues').value;
-    state.template = template;
-    state.bulkValues = bulkRaw;
-
-    if(!template){
-      designs = [];
-      renderPreviews();
-      return;
-    }
-
-    const parsed = parseBulkValues(template, bulkRaw);
-    const prevOverrides = designs.map(d => d.override);
-
-    let newDesigns = parsed.map((p, i) => ({
-      id: 'd' + i + '_' + Date.now(),
-      text: p.text,
-      valueSlug: slugify(p.raw),
-      override: prevOverrides[i] || null,
-      isVariation: false,
-      variationLabel: null,
-    }));
-
-    // Generate variations if enabled
-    if(state.generateVariations){
-      const withVariations = [];
-      newDesigns.forEach(d => {
-        withVariations.push(d);
-        const vars = generateVariationsForPhrase(d.text, d.valueSlug);
-        withVariations.push(...vars);
-      });
-      newDesigns = withVariations;
-    }
-
-    designs = newDesigns;
-    renderPreviews();
-
-    const baseCount = parsed.length;
-    const totalCount = designs.length;
-    if(state.generateVariations){
-      showToast(`Generated ${totalCount} designs (${baseCount} phrases × variations)`);
-    } else {
-      showToast(`Generated ${totalCount} designs`);
-    }
-  }
-
-  function bgClass(bg){
-    return { transparent:'bg-transparent', white:'bg-white', black:'bg-black', grey:'bg-grey' }[bg] || 'bg-transparent';
-  }
-
-  function renderPreviews(){
-    const grid = document.getElementById('previewGrid');
-    const countEl = document.getElementById('previewCount');
-    grid.innerHTML = '';
-    countEl.textContent = designs.length + (designs.length === 1 ? ' design' : ' designs');
-
-    if(designs.length === 0){
-      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
-        <div class="empty-state-icon">👕</div>
-        <div class="empty-state-title">No designs yet</div>
-        Build a template, add values, pick a style, and hit Generate.
-      </div>`;
-      return;
-    }
-
-    designs.forEach((d, idx) => {
-      const style = effectiveStyle(d);
-      const card = document.createElement('div');
-      card.className = 'card' + (d.override && !d.isVariation ? ' overridden' : '');
-      card.style.animationDelay = (idx * 0.04) + 's';
-
-      const thumbWrap = document.createElement('div');
-
-      if(state.previewMode === 'mockup'){
-        thumbWrap.className = 'card-thumb-wrap mockup-mode';
-        const mockup = document.createElement('div');
-        mockup.className = 'tshirt-mockup';
-        mockup.innerHTML = buildTshirtSVG(state.shirtColor);
-
-        const designArea = document.createElement('div');
-        designArea.className = 'tshirt-design-area';
-        const canvas = buildCanvasInner(d);
-        designArea.appendChild(canvas);
-        mockup.appendChild(designArea);
-        thumbWrap.appendChild(mockup);
-      } else {
-        thumbWrap.className = 'card-thumb-wrap ' + bgClass(style.bg);
-        const canvas = buildCanvasInner(d);
-        thumbWrap.appendChild(canvas);
-      }
-
-      if(d.override && !d.isVariation){
-        const badge = document.createElement('div');
-        badge.className = 'overridden-badge';
-        badge.textContent = 'Edited';
-        thumbWrap.appendChild(badge);
-      }
-      if(d.isVariation && d.variationLabel){
-        const badge = document.createElement('div');
-        badge.className = 'variation-badge';
-        badge.textContent = d.variationLabel;
-        thumbWrap.appendChild(badge);
-      }
-
-      thumbWrap.addEventListener('click', () => openModal(d));
-      card.appendChild(thumbWrap);
-
-      const footer = document.createElement('div');
-      footer.className = 'card-footer';
-      const label = document.createElement('div');
-      label.className = 'card-label';
-      label.textContent = d.text.replace(/\n/g,' ');
-      label.title = d.text;
-
-      const actions = document.createElement('div');
-      actions.className = 'card-actions';
-      const editBtn = document.createElement('button');
-      editBtn.className = 'btn-ghost btn-small';
-      editBtn.textContent = '✏️';
-      editBtn.title = 'Edit';
-      editBtn.addEventListener('click', (e) => { e.stopPropagation(); openModal(d); });
-      const dlBtn = document.createElement('button');
-      dlBtn.className = 'btn-ghost btn-small';
-      dlBtn.textContent = '⬇';
-      dlBtn.title = 'Download';
-      dlBtn.addEventListener('click', (e) => { e.stopPropagation(); downloadSingle(d); });
-      actions.appendChild(editBtn);
-      actions.appendChild(dlBtn);
-
-      footer.appendChild(label);
-      footer.appendChild(actions);
-      card.appendChild(footer);
-      grid.appendChild(card);
-    });
-
-    // FIX: Use rAF to ensure DOM is laid out before scaling thumbnails
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        scaleThumbnails();
-      });
-    });
-  }
-
-  function scaleThumbnails(){
-    document.querySelectorAll('.card-thumb-wrap').forEach(wrap => {
-      if(wrap.classList.contains('mockup-mode')){
-        // For mockup mode, scale the design area
-        const designArea = wrap.querySelector('.tshirt-design-area');
-        if(!designArea) return;
-        const canvas = designArea.querySelector('.design-canvas');
-        if(!canvas) return;
-        const areaWidth = designArea.getBoundingClientRect().width;
-        if(areaWidth <= 0) return;
-        const scale = areaWidth / CANVAS_W;
-        canvas.style.transform = `scale(${scale})`;
-        canvas.style.transformOrigin = 'center center';
-        // Also constrain height
-        const areaHeight = designArea.getBoundingClientRect().height;
-        const canvasScaledH = CANVAS_H * scale;
-        if(canvasScaledH > areaHeight){
-          const hScale = areaHeight / CANVAS_H;
-          const finalScale = Math.min(scale, hScale);
-          canvas.style.transform = `scale(${finalScale})`;
-        }
-      } else {
-        const canvas = wrap.querySelector('.design-canvas');
-        if(!canvas) return;
-        const wrapWidth = wrap.getBoundingClientRect().width;
-        if(wrapWidth <= 0) return; // FIX: guard against 0 width
-        const scale = wrapWidth / CANVAS_W;
-        canvas.style.transform = `scale(${scale})`;
-        canvas.style.transformOrigin = 'top left';
-      }
-    });
-  }
-  window.addEventListener('resize', () => {
-    requestAnimationFrame(scaleThumbnails);
-  });
-
-  // ======================================================================
-  //  MODAL: enlarge + per-card override editor
-  // ======================================================================
-  let modalDesign = null;
-
-  function openModal(d){
-    modalDesign = d;
-    const overlay = document.getElementById('modalOverlay');
-    overlay.classList.add('open');
-    renderModalPreview();
-    renderModalEditor();
-  }
-
-  function renderModalPreview(){
-    const content = document.getElementById('modalContent');
-    content.innerHTML = '';
-    const style = effectiveStyle(modalDesign);
-    const thumbWrap = document.createElement('div');
-    thumbWrap.className = 'card-thumb-wrap ' + bgClass(style.bg);
-    const canvas = buildCanvasInner(modalDesign);
-    thumbWrap.appendChild(canvas);
-    content.appendChild(thumbWrap);
-    requestAnimationFrame(() => {
-      const wrapWidth = thumbWrap.getBoundingClientRect().width;
-      if(wrapWidth > 0){
-        canvas.style.transform = `scale(${wrapWidth / CANVAS_W})`;
-      }
-    });
-  }
-
-  function renderModalEditor(){
-    const ed = document.getElementById('modalEditor');
-    const hasOverride = !!(modalDesign.override && !modalDesign.isVariation);
-    const style = effectiveStyle(modalDesign);
-
-    ed.innerHTML = `
-      <div class="panel-header">✏️ Edit This Design</div>
-      <div class="hint" style="margin-bottom:12px;">${escapeHTML(modalDesign.text.replace(/\n/g,' '))}</div>
-
-      <label class="field-label" style="margin-top:0;">Font override</label>
-      <select id="ovFontSelect" style="font-size:12px;"></select>
-
-      <label class="field-label">Color override</label>
-      <div class="color-row">
-        <input type="color" id="ovColorPicker" value="${style.color}">
-        <span class="slider-val" id="ovColorLabel">${style.color}</span>
-      </div>
-
-      <label class="field-label">Text effect</label>
-      <div class="seg" id="ovEffectSeg">
-        <button data-val="none" ${style.effect==='none'?'class="active"':''}>None</button>
-        <button data-val="outline" ${style.effect==='outline'?'class="active"':''}>Outline</button>
-        <button data-val="shadow" ${style.effect==='shadow'?'class="active"':''}>Shadow</button>
-        <button data-val="3d" ${style.effect==='3d'?'class="active"':''}>3D</button>
-      </div>
-
-      <label class="field-label">Font size override</label>
-      <input type="range" id="ovFontSize" min="60" max="900" step="5" value="${style.fontSize}">
-      <div class="slider-val" id="ovFontSizeVal">${style.fontSize}px</div>
-
-      <label class="field-label">Letter spacing override</label>
-      <input type="range" id="ovLetterSpacing" min="-2" max="10" step="0.5" value="${style.letterSpacing}">
-      <div class="slider-val" id="ovLetterSpacingVal">${style.letterSpacing}px</div>
-
-      <div class="toggle-row" style="margin-top:14px;">
-        <label class="field-label">Auto-fit (this card)</label>
-        <div class="switch ${style.autoFit ? 'on' : ''}" id="ovAutoFitToggle"></div>
-      </div>
-
-      <div style="margin-top:18px; display:flex; gap:6px; flex-wrap:wrap;">
-        <button class="btn-ghost btn-small" id="ovResetBtn" ${hasOverride ? '' : 'disabled'}>Reset</button>
-        <button class="btn-ghost btn-small" id="ovDownloadBtn">⬇ Download</button>
-      </div>
-    `;
-
-    // Populate font select in modal
-    const ovFontSel = document.getElementById('ovFontSelect');
-    FONTS.forEach(f => {
-      const opt = document.createElement('option');
-      opt.value = f.family;
-      opt.textContent = f.name;
-      opt.style.fontFamily = f.family;
-      ovFontSel.appendChild(opt);
-    });
-    ovFontSel.value = style.font;
-
-    function ensureOverride(){
-      if(!modalDesign.override) modalDesign.override = {};
-      return modalDesign.override;
-    }
-
-    ovFontSel.addEventListener('change', () => {
-      ensureOverride().font = ovFontSel.value;
-      const f = FONTS.find(x => x.family === ovFontSel.value);
-      if(f) ensureOverride().fontName = f.name;
-      refreshAfterOverrideChange();
-    });
-
-    document.getElementById('ovColorPicker').addEventListener('input', (e) => {
-      ensureOverride().color = e.target.value;
-      document.getElementById('ovColorLabel').textContent = e.target.value.toUpperCase();
-      refreshAfterOverrideChange();
-    });
-
-    document.getElementById('ovEffectSeg').querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.getElementById('ovEffectSeg').querySelectorAll('button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        ensureOverride().effect = btn.dataset.val;
-        refreshAfterOverrideChange();
-      });
-    });
-
-    document.getElementById('ovFontSize').addEventListener('input', (e) => {
-      ensureOverride().fontSize = parseFloat(e.target.value);
-      document.getElementById('ovFontSizeVal').textContent = e.target.value + 'px';
-      refreshAfterOverrideChange();
-    });
-    document.getElementById('ovLetterSpacing').addEventListener('input', (e) => {
-      ensureOverride().letterSpacing = parseFloat(e.target.value);
-      document.getElementById('ovLetterSpacingVal').textContent = e.target.value + 'px';
-      refreshAfterOverrideChange();
-    });
-    document.getElementById('ovAutoFitToggle').addEventListener('click', (e) => {
-      const ov = ensureOverride();
-      ov.autoFit = !(modalDesign.override && 'autoFit' in modalDesign.override ? modalDesign.override.autoFit : state.autoFit);
-      e.target.classList.toggle('on', ov.autoFit);
-      refreshAfterOverrideChange();
-    });
-    document.getElementById('ovResetBtn').addEventListener('click', () => {
-      modalDesign.override = null;
-      renderModalPreview();
-      renderModalEditor();
-      renderPreviews();
-    });
-    document.getElementById('ovDownloadBtn').addEventListener('click', () => downloadSingle(modalDesign));
-
-    function refreshAfterOverrideChange(){
-      renderModalPreview();
-      renderPreviews();
-    }
-  }
-
-  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
-  document.getElementById('modalOverlay').addEventListener('click', (e) => {
-    if(e.target.id === 'modalOverlay') closeModal();
-  });
-  function closeModal(){
-    document.getElementById('modalOverlay').classList.remove('open');
-    modalDesign = null;
-  }
-
-  // ======================================================================
-  //  EXPORT
-  // ======================================================================
-  function renderFullResCanvas(d){
-    const root = document.getElementById('renderRoot');
-    root.innerHTML = '';
-    const wrap = document.createElement('div');
-    wrap.style.width = CANVAS_W + 'px';
-    wrap.style.height = CANVAS_H + 'px';
-    const canvas = buildCanvasInner(d);
-    canvas.style.transform = 'none';
-    wrap.appendChild(canvas);
-    root.appendChild(wrap);
-    return wrap;
-  }
-
-  async function renderToBase64(d){
-    if(typeof html2canvas !== 'function'){
-      throw new Error('html2canvas not loaded');
-    }
-    const wrap = renderFullResCanvas(d);
-    await new Promise(r => requestAnimationFrame(r));
-    await new Promise(r => requestAnimationFrame(r));
-    const canvasEl = await html2canvas(wrap, {
-      width: CANVAS_W, height: CANVAS_H, backgroundColor: null, scale: 1, useCORS: true
-    });
-    return canvasEl.toDataURL('image/png');
-  }
-
-  async function renderToBlob(d){
-    if(typeof html2canvas !== 'function'){
-      showToast('html2canvas failed to load. Check your internet connection.', 'error');
-      throw new Error('html2canvas not loaded');
-    }
-    const wrap = renderFullResCanvas(d);
-    await new Promise(r => requestAnimationFrame(r));
-    // Extra frame for font rendering
-    await new Promise(r => requestAnimationFrame(r));
-    const canvasEl = await html2canvas(wrap, {
-      width: CANVAS_W, height: CANVAS_H, backgroundColor: null, scale: 1, useCORS: true
-    });
-    return new Promise(resolve => canvasEl.toBlob(resolve, 'image/png'));
-  }
-
-  function filenameFor(d){
-    const templateSlug = slugify(state.template);
-    return `${templateSlug}-${d.valueSlug}.png`;
-  }
-
-  async function downloadSingle(d){
-    try{
-      const blob = await renderToBlob(d);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filenameFor(d);
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-      showToast('Downloaded ' + filenameFor(d));
-    } catch(err){
-      showToast('Download failed: ' + err.message, 'error');
-    }
-  }
-
-  document.getElementById('downloadAllBtn').addEventListener('click', async () => {
-    if(designs.length === 0){
-      showToast('No designs to download', 'error');
-      return;
-    }
-    if(typeof JSZip !== 'function'){
-      showToast('JSZip failed to load. Check your internet connection.', 'error');
-      return;
-    }
-    const btn = document.getElementById('downloadAllBtn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Packaging…';
-    btn.disabled = true;
-    btn.classList.add('generating-pulse');
-
-    try{
-      const zip = new JSZip();
-      for(let i = 0; i < designs.length; i++){
-        const d = designs[i];
-        btn.innerHTML = `⏳ ${i+1}/${designs.length}…`;
-        const blob = await renderToBlob(d);
-        zip.file(filenameFor(d), blob);
-      }
-      const zipBlob = await zip.generateAsync({type:'blob'});
-      const url = URL.createObjectURL(zipBlob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `${slugify(state.template)}-designs.zip`;
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-      showToast(`Downloaded ZIP with ${designs.length} designs`);
-    } catch(err){
-      showToast('Export failed: ' + err.message, 'error');
-    } finally {
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-      btn.classList.remove('generating-pulse');
-    }
-  });
-
-  // ======================================================================
-  //  UPLOAD TO PRINTFUL
-  // ======================================================================
-  document.getElementById('uploadPrintfulBtn').addEventListener('click', async () => {
-    if(designs.length === 0){
-      showToast('No designs to upload', 'error');
-      return;
-    }
-    const btn = document.getElementById('uploadPrintfulBtn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '☁️ Uploading…';
-    btn.disabled = true;
-    btn.classList.add('generating-pulse');
-
-    let successCount = 0;
-    try {
-      for(let i = 0; i < designs.length; i++){
-        const d = designs[i];
-        btn.innerHTML = `☁️ ${i+1}/${designs.length}…`;
-        const base64Data = await renderToBase64(d);
-        
-        const res = await fetch('/api/upload-printful', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            base64Image: base64Data,
-            filename: filenameFor(d)
-          })
+        <!-- Panel 3: Responsive Variant Output Matrix Generation Grid -->
+        <div class="panel">
+            <div class="preview-header">
+                <h2>Generated Matrix Grid Output</h2>
+                <div style="display:flex; gap:8px;">
+                    <button class="primary" style="width: auto; padding: 8px 16px; background: #E52E2E;" onclick="uploadToPrintful()" id="uploadPrintfulBtn">☁️ Upload to Printful</button>
+                    <button class="primary" style="width: auto; padding: 8px 16px;" onclick="downloadAllZip()">Bulk Compile ZIP Package</button>
+                </div>
+            </div>
+            <div class="grid" id="previewGrid"></div>
+        </div>
+    </div>
+
+    <!-- Background Process Loading Overlay Modal HUD Layout -->
+    <div class="loader-overlay" id="loadingHUD">
+        <div class="spinner"></div>
+        <div id="loaderStatusText" style="font-size: 13px; font-weight: 500;">Compiling Assets to Canvas Space Matrix...</div>
+    </div>
+
+    <!-- Zoom Preview Lightbox HUD -->
+    <div class="modal" id="previewModal" onclick="closeLightboxModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="canvas-container-wrapper bg-transparent" id="modalCanvasTarget"></div>
+        </div>
+    </div>
+
+    <script>
+        // Pre-seeded System Native Standard Functional Blueprints Configuration Array
+        const defaultBlueprints = [
+            { id: "b1", template: "{hobby} is my cardio", font: "Bebas Neue", color: "#0A0A0A", size: "380", spacing: "2", transform: "uppercase", align: "center", altFont: false },
+            { id: "b2", template: "World's okayest {role}", font: "Playfair Display", color: "#C5573A", size: "320", spacing: "1", transform: "none", align: "center", altFont: true },
+            { id: "b3", template: "Just here for the {noun}", font: "Anton", color: "#0A0A0A", size: "400", spacing: "0", transform: "uppercase", align: "center", altFont: false },
+            { id: "b4", template: "Property of the {name} family", font: "Archivo Black", color: "#1F2D4F", size: "280", spacing: "4", transform: "uppercase", align: "center", altFont: false },
+            { id: "b5", template: "Currently reading: {book}", font: "Fraunces", color: "#7A8B6F", size: "310", spacing: "1", transform: "none", align: "center", altFont: true }
+        ];
+
+        // Search Query Trend Automation Preset Libraries
+        const trendDatabase = {
+            runners: {
+                template: "ALREADY TIRED / {club} RUN CLUB",
+                values: "BACKYARD\nSLOW PACED\nPOST-RUN BEER\nAPATHETIC\nMID-PACK\nZERO MILES\n6AM PANIC\nLAST PLACE"
+            },
+            corporate: {
+                template: "{profession} / CHAOS COORDINATOR",
+                values: "SOFTWARE ENGINEER\nPROJECT MANAGER\nHR MANAGER\nRETAIL BOSS\nDATA ANALYST\nER NURSE\nNIGHT SHIFT"
+            },
+            dogs: {
+                template: "JUDGED SILENTLY BY MY {breed}",
+                values: "FRENCH BULLDOG\nCORGI\nGOLDEN RETRIEVER\nBORDER COLLIE\nGERMAN SHEPHERD\nCHIHUAHUA"
+            }
+        };
+
+        let appState = {
+            savedBlueprints: [],
+            currentTextAlign: 'center',
+            currentTextTransform: 'uppercase',
+            currentPreviewBg: 'transparent',
+            altFontEnabled: false
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initStorageEngineData();
+            renderBlueprintChips();
+            generateGrid();
         });
-        
-        const data = await res.json();
-        if(!res.ok) {
-          console.error("Printful Error", data);
-          throw new Error(data.error || 'Upload failed');
+
+        function initStorageEngineData() {
+            const raw = localStorage.getItem('pod_studio_blueprints');
+            if (raw) {
+                appState.savedBlueprints = JSON.parse(raw);
+            } else {
+                appState.savedBlueprints = [...defaultBlueprints];
+                localStorage.setItem('pod_studio_blueprints', JSON.stringify(appState.savedBlueprints));
+            }
         }
-        successCount++;
-      }
-      showToast(`Successfully uploaded ${successCount} designs to Printful!`, 'success');
-    } catch(err){
-      showToast('Upload failed: ' + err.message, 'error');
-    } finally {
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-      btn.classList.remove('generating-pulse');
-    }
-  });
 
-  // ======================================================================
-  //  CLEAR ALL
-  // ======================================================================
-  document.getElementById('clearAllBtn').addEventListener('click', () => {
-    designs = [];
-    renderPreviews();
-    showToast('All designs cleared');
-  });
+        function renderBlueprintChips() {
+            const container = document.getElementById('templateChips');
+            container.innerHTML = '';
+            appState.savedBlueprints.forEach(bp => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.innerText = bp.template;
+                chip.onclick = () => loadStructuralBlueprint(bp);
+                container.appendChild(chip);
+            });
+        }
 
-  // ======================================================================
-  //  SELECT ALL (future: batch operations)
-  // ======================================================================
-  document.getElementById('selectAllBtn').addEventListener('click', () => {
-    showToast(`${designs.length} designs in batch`);
-  });
+        // Auto-Injection Variable Loading Engine Logic Block
+        function injectTrendVariables() {
+            const selector = document.getElementById('hijackSelector');
+            const targetKey = selector.value;
+            if (!targetKey || !trendDatabase[targetKey]) return;
 
-  // ======================================================================
-  //  INIT
-  // ======================================================================
-  document.getElementById('generateBtn').addEventListener('click', generateDesigns);
-  document.getElementById('templateInput').value = state.template;
-  document.getElementById('bulkValues').value = state.bulkValues;
+            const selectedTrend = trendDatabase[targetKey];
+            document.getElementById('templateInput').value = selectedTrend.template;
+            document.getElementById('bulkValues').value = selectedTrend.values;
+            
+            // Auto switch style engine variables to make trend variations pop immediately
+            if (targetKey === 'runners') {
+                document.getElementById('fontFamily').value = "Bebas Neue";
+                toggleAltFont(false);
+            } else if (targetKey === 'dogs') {
+                document.getElementById('fontFamily').value = "Playfair Display";
+                toggleAltFont(true);
+            }
+            
+            generateGrid();
+            selector.value = ""; // reset dropdown
+        }
 
-  setupControls();
-  renderTemplateChips();
+        function toggleAltFont(boolVal) {
+            appState.altFontEnabled = boolVal;
+            document.getElementById('altFontTrue').classList.toggle('active', boolVal);
+            document.getElementById('altFontFalse').classList.toggle('active', !boolVal);
+            updateLiveStyle();
+        }
 
-  // FIX: Font load with timeout fallback — never wait forever
-  let generated = false;
-  function doInitialGenerate(){
-    if(generated) return;
-    generated = true;
-    fontsLoaded = true;
-    generateDesigns();
-  }
+        function setPresetColor(hex) {
+            document.getElementById('textColorHex').value = hex;
+            updateLiveStyle();
+        }
 
-  if(document.fonts && document.fonts.ready){
-    document.fonts.ready.then(doInitialGenerate);
-  }
-  // Fallback: generate after 2s even if fonts haven't loaded
-  setTimeout(doInitialGenerate, 2000);
+        function setTextAlign(align) {
+            appState.currentTextAlign = align;
+            const buttons = document.querySelectorAll('#alignSegment button');
+            buttons.forEach(btn => btn.classList.toggle('active', btn.innerText.toLowerCase() === align));
+            updateLiveStyle();
+        }
 
-  // --- TREND HIJACKER LOGIC ---
-  const trendModal = document.getElementById('trendModal');
-  const openTrendHijackerBtn = document.getElementById('openTrendHijackerBtn');
-  const closeTrendModal = document.getElementById('closeTrendModal');
-  const trendNicheSelect = document.getElementById('trendNicheSelect');
-  const trendFormatSelect = document.getElementById('trendFormatSelect');
-  const applyTrendsBtn = document.getElementById('applyTrendsBtn');
+        function setTextTransform(transform) {
+            appState.currentTextTransform = transform;
+            const buttons = document.querySelectorAll('#transformSegment button');
+            buttons.forEach(btn => btn.classList.toggle('active', btn.innerText.replace('UPPER', 'uppercase').replace('As Typed', 'none').replace('Title', 'capitalize') === transform));
+            updateLiveStyle();
+        }
 
-  openTrendHijackerBtn.addEventListener('click', () => {
-    trendModal.classList.add('show');
-  });
+        function setPreviewBg(bgClass) {
+            appState.currentPreviewBg = bgClass;
+            const buttons = document.querySelectorAll('#bgSegment button');
+            buttons.forEach(btn => btn.classList.toggle('active', btn.innerText.toLowerCase() === bgClass));
+            
+            const containers = document.querySelectorAll('.canvas-container-wrapper');
+            containers.forEach(el => {
+                el.className = 'canvas-container-wrapper bg-' + bgClass;
+            });
+        }
 
-  closeTrendModal.addEventListener('click', () => {
-    trendModal.classList.remove('show');
-  });
+        function saveCurrentTemplate() {
+            const currentText = document.getElementById('templateInput').value;
+            if (!currentText.trim()) return;
 
-  trendModal.addEventListener('click', (e) => {
-    if(e.target === trendModal) trendModal.classList.remove('show');
-  });
+            const newBlueprint = {
+                id: 'bp_' + Date.now(),
+                template: currentText,
+                font: document.getElementById('fontFamily').value,
+                color: document.getElementById('textColorHex').value,
+                size: document.getElementById('fontSizeSlider').value,
+                spacing: document.getElementById('letterSpacingSlider').value,
+                transform: appState.currentTextTransform,
+                align: appState.currentTextAlign,
+                altFont: appState.altFontEnabled
+            };
 
-  const trendData = {
-    niches: {
-      teachers: ["Teacher", "Kindergarten Teacher", "Math Teacher", "Special Ed Teacher", "Principal", "Educator"],
-      nurses: ["Nurse", "ER Nurse", "NICU Nurse", "Nursing Student", "Registered Nurse", "Scrub Tech"],
-      gym: ["Gym Rat", "Weightlifter", "Bodybuilder", "Cardio Queen", "Powerlifter", "Fitness Coach"],
-      introverts: ["Introvert", "Homebody", "Overthinker", "Nap Enthusiast", "Anti-Social Club", "Quiet Person"],
-      pets: ["Dog Mom", "Cat Dad", "Plant Parent", "Rescue Mom", "Golden Retriever Dad", "Corgi Lover"],
-      tech: ["Software Engineer", "Web Developer", "Programmer", "Sysadmin", "UX Designer", "Tech Bro"]
-    },
-    formats: {
-      era: "In my {niche} Era",
-      okayest: "World's Okayest {niche}",
-      coffee: "I run on coffee and {niche} things",
-      powered: "Powered by iced coffee and {niche} chaos",
-      justa: "Just a {niche} trying to survive"
-    }
-  };
+            appState.savedBlueprints.unshift(newBlueprint);
+            localStorage.setItem('pod_studio_blueprints', JSON.stringify(appState.savedBlueprints));
+            renderBlueprintChips();
+        }
 
-  applyTrendsBtn.addEventListener('click', () => {
-    let selectedNicheKey = trendNicheSelect.value;
-    let selectedFormatKey = trendFormatSelect.value;
+        function loadStructuralBlueprint(bp) {
+            document.getElementById('templateInput').value = bp.template;
+            document.getElementById('fontFamily').value = bp.font;
+            document.getElementById('textColorHex').value = bp.color;
+            document.getElementById('fontSizeSlider').value = bp.size;
+            document.getElementById('letterSpacingSlider').value = bp.spacing;
+            
+            toggleAltFont(bp.altFont);
+            setTextAlign(bp.align);
+            setTextTransform(bp.transform);
+            updateLiveStyle();
+        }
 
-    let nicheKeys = Object.keys(trendData.niches);
-    if(selectedNicheKey === 'random') {
-      selectedNicheKey = nicheKeys[Math.floor(Math.random() * nicheKeys.length)];
-    }
+        function updateLiveStyle() {
+            const font = document.getElementById('fontFamily').value;
+            const color = document.getElementById('textColorHex').value;
+            const size = document.getElementById('fontSizeSlider').value;
+            const spacing = document.getElementById('letterSpacingSlider').value;
+            const maxWidth = document.getElementById('maxWidthSlider').value;
 
-    let formatKeys = Object.keys(trendData.formats);
-    let formatTpl = "";
-    if(selectedFormatKey === 'random') {
-      selectedFormatKey = formatKeys[Math.floor(Math.random() * formatKeys.length)];
-    }
-    formatTpl = trendData.formats[selectedFormatKey];
+            document.getElementById('fontSizeVal').innerText = size + 'px';
+            document.getElementById('letterSpacingVal').innerText = spacing + 'px';
+            document.getElementById('maxWidthVal').innerText = maxWidth + '%';
 
-    // Get the keywords for the selected niche
-    let keywords = [...trendData.niches[selectedNicheKey]];
-    // If random, mix in some other random ones for fun
-    if(trendNicheSelect.value === 'random') {
-      let anotherKey = nicheKeys[Math.floor(Math.random() * nicheKeys.length)];
-      keywords = keywords.concat(trendData.niches[anotherKey]);
-    }
+            const targets = document.querySelectorAll('.tshirt-canvas');
+            targets.forEach(canvas => {
+                canvas.style.fontFamily = font;
+                canvas.style.color = color;
+                canvas.style.fontSize = size + 'px';
+                canvas.style.letterSpacing = spacing + 'px';
+                canvas.style.textAlign = appState.currentTextAlign;
+                canvas.style.textTransform = appState.currentTextTransform;
+                
+                const wrapper = canvas.querySelector('.text-wrapper-box');
+                if (wrapper) wrapper.style.width = maxWidth + '%';
 
-    // Shuffle and pick 10 max
-    keywords = keywords.sort(() => 0.5 - Math.random()).slice(0, 10);
+                if (appState.altFontEnabled) {
+                    canvas.classList.add('alt-font-active');
+                } else {
+                    canvas.classList.remove('alt-font-active');
+                }
+            });
+        }
 
-    // Update UI
-    document.getElementById('templateInput').value = formatTpl;
-    document.getElementById('bulkValues').value = keywords.join('\n');
-    
-    // Close modal and generate
-    trendModal.classList.remove('show');
-    generateDesigns();
-  });
+        // Parse Text strings safely separating single inputs or multi-layer structures
+        function getParsedLinesArray() {
+            const rawTemplate = document.getElementById('templateInput').value;
+            const rawTextarea = document.getElementById('bulkValues').value;
+            const lines = rawTextarea.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            
+            // Extract placeholder key names array signature inside brackets
+            const placeholderMatches = rawTemplate.match(/\{([^}]+)\}/g);
+            
+            return lines.map(line => {
+                let computedOutput = rawTemplate;
+                let shortSlug = "design";
 
-})();
-</script>
+                if (placeholderMatches && placeholderMatches.length > 0) {
+                    // Match single variable parsing loop
+                    const placeholderKey = placeholderMatches[0];
+                    // Replace the raw markup wrapper structure safely with highlighted or stylized nodes
+                    const secureReplacerText = `<span class="placeholder-highlight">${line}</span>`;
+                    computedOutput = computedOutput.replace(placeholderKey, secureReplacerText);
+                    shortSlug = line.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                }
+                return { htmlString: computedOutput, slug: shortSlug };
+            });
+        }
+
+        function generateGrid() {
+            const grid = document.getElementById('previewGrid');
+            grid.innerHTML = '';
+            
+            const variantCollection = getParsedLinesArray();
+            if (variantCollection.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px; text-align:center; color: var(--text-muted); font-size:13px;">Enter variant parameters to populate production tracking matrix cells.</div>';
+                return;
+            }
+
+            // Calculation mapping engine scale ratio logic configuration space
+            const previewCardScaleFactor = 240 / 4500;
+
+            variantCollection.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = `canvas-container-wrapper bg-${appState.currentPreviewBg}`;
+                
+                const canvas = document.createElement('div');
+                canvas.className = 'tshirt-canvas';
+                canvas.id = `canvas-node-${index}`;
+                canvas.style.transform = `scale(${previewCardScaleFactor})`;
+
+                const textBox = document.createElement('div');
+                textBox.className = 'text-wrapper-box';
+                textBox.innerHTML = `<div class="text-line">${item.htmlString}</div>`;
+
+                canvas.appendChild(textBox);
+                wrapper.appendChild(canvas);
+                card.appendChild(wrapper);
+
+                // Actions toolbar tray assembly attachment
+                const tray = document.createElement('div');
+                tray.className = 'card-actions';
+                
+                const btnZoom = document.createElement('button');
+                btnZoom.innerText = 'Zoom View';
+                btnZoom.onclick = () => openLightboxModal(item.htmlString);
+                
+                const btnDown = document.createElement('button');
+                btnDown.innerText = 'Export PNG';
+                btnDown.onclick = () => exportSingleCanvasPNG(index, item.slug);
+
+                tray.appendChild(btnZoom);
+                tray.appendChild(btnDown);
+                card.appendChild(tray);
+                grid.appendChild(card);
+            });
+
+            updateLiveStyle();
+        }
+
+        function openLightboxModal(innerMarkupStr) {
+            const target = document.getElementById('modalCanvasTarget');
+            target.innerHTML = '';
+            
+            const modalScaleFactor = 476 / 4500;
+            const cloneCanvas = document.createElement('div');
+            cloneCanvas.className = 'tshirt-canvas';
+            cloneCanvas.style.transform = `scale(${modalScaleFactor})`;
+            
+            const textBox = document.createElement('div');
+            textBox.className = 'text-wrapper-box';
+            textBox.innerHTML = `<div class="text-line">${innerMarkupStr}</div>`;
+            
+            cloneCanvas.appendChild(textBox);
+            target.appendChild(cloneCanvas);
+            document.getElementById('previewModal').style.display = 'flex';
+            updateLiveStyle();
+        }
+
+        function closeLightboxModal() {
+            document.getElementById('previewModal').style.display = 'none';
+        }
+
+        // High-DPI Isolated Processing Engine for Transparent PNG Exports
+        async function renderHighResBlob(nodeIndex) {
+            const targetSourceNode = document.getElementById(`canvas-node-${nodeIndex}`);
+            if (!targetSourceNode) return null;
+
+            // Save visual working scale vector track signature states
+            const originalInlineTransformStyle = targetSourceNode.style.transform;
+            
+            // Set element matrix back to full structural bounds 
+            targetSourceNode.style.transform = 'none';
+            
+            const processingOptions = {
+                backgroundColor: null,
+                scale: 1,
+                width: 4500,
+                height: 5400,
+                logging: false,
+                useCORS: true
+            };
+
+            const canvasOutputElement = await html2canvas(targetSourceNode, processingOptions);
+            
+            // Re-apply original presentation scaling footprint safely
+            targetSourceNode.style.transform = originalInlineTransformStyle;
+            
+            return new Promise(resolve => {
+                canvasOutputElement.toBlob(b => resolve(b), 'image/png');
+            });
+        }
+
+        async function exportSingleCanvasPNG(nodeIndex, fileSlugStr) {
+            const hud = document.getElementById('loadingHUD');
+            document.getElementById('loaderStatusText').innerText = 'Rendering Isolated Canvas Blueprint Matrix...';
+            hud.style.display = 'flex';
+
+            try {
+                const blob = await renderHighResBlob(nodeIndex);
+                if (blob) {
+                    const downloadAnchorElement = document.createElement('a');
+                    downloadAnchorElement.href = URL.createObjectURL(blob);
+                    downloadAnchorElement.download = `design-${fileSlugStr}.png`;
+                    downloadAnchorElement.click();
+                }
+            } catch (err) {
+                console.error("Canvas isolation export layer fault event:", err);
+            } finally {
+                hud.style.display = 'none';
+            }
+        }
+
+        // Sequential Zip Compile Batching Strategy safely prevents crashing browser tracking layers
+        async function downloadAllZip() {
+            const variantCollection = getParsedLinesArray();
+            if (variantCollection.length === 0) return;
+
+            const hud = document.getElementById('loadingHUD');
+            hud.style.display = 'flex';
+
+            const archive = new JSZip();
+
+            for (let i = 0; i < variantCollection.length; i++) {
+                document.getElementById('loaderStatusText').innerText = `Compiling print file matrix item ${i + 1} of ${variantCollection.length}...`;
+                
+                try {
+                    const imgBlob = await renderHighResBlob(i);
+                    if (imgBlob) {
+                        archive.file(`design-${variantCollection[i].slug}.png`, imgBlob);
+                    }
+                } catch (canvasErr) {
+                    console.error(`Canvas rendering failure index layer ${i}:`, canvasErr);
+                }
+            }
+
+            document.getElementById('loaderStatusText').innerText = 'Packing ZIP compression container streams...';
+            const zipOutputContentBlob = await archive.generateAsync({ type: "blob" });
+            
+            const bundleTriggerAnchor = document.createElement('a');
+            bundleTriggerAnchor.href = URL.createObjectURL(zipOutputContentBlob);
+            bundleTriggerAnchor.download = "studio-batch-pack-designs.zip";
+            bundleTriggerAnchor.click();
+
+            hud.style.display = 'none';
+        }
+
+        // Upload to Printful (Restored Functionality)
+        async function uploadToPrintful() {
+            const variantCollection = getParsedLinesArray();
+            if (variantCollection.length === 0) {
+                alert('No designs to upload');
+                return;
+            }
+
+            const btn = document.getElementById('uploadPrintfulBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '☁️ Uploading...';
+            btn.disabled = true;
+
+            const hud = document.getElementById('loadingHUD');
+            hud.style.display = 'flex';
+
+            let successCount = 0;
+
+            try {
+                for (let i = 0; i < variantCollection.length; i++) {
+                    const item = variantCollection[i];
+                    document.getElementById('loaderStatusText').innerText = `Uploading design ${i + 1} of ${variantCollection.length} to Printful...`;
+                    
+                    const imgBlob = await renderHighResBlob(i);
+                    if (!imgBlob) continue;
+                    
+                    // Convert blob to base64
+                    const base64Data = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(imgBlob);
+                    });
+
+                    const res = await fetch('/api/upload-printful', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            base64Image: base64Data,
+                            filename: `design-${item.slug}.png`
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        console.error("Printful Error", data);
+                        throw new Error(data.error || 'Upload failed');
+                    }
+                    successCount++;
+                }
+                alert(`Successfully uploaded ${successCount} designs to Printful!`);
+            } catch (err) {
+                console.error("Upload failed:", err);
+                alert('Upload failed: ' + err.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                hud.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
