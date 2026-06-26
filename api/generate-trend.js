@@ -25,13 +25,26 @@ export default async function handler(req, res) {
                 messages: [
                     {
                         role: 'system',
-                        content: `You are an expert Print-on-Demand e-commerce researcher.
+                        content: `You are an expert Print-on-Demand e-commerce researcher and Art Director.
 Your task is to identify a highly profitable, trending niche (e.g., hobbies, careers, dog breeds, introverts).
 Generate a short text template for a t-shirt design with ONE variable placeholder, like "WORLD'S OKAYEST {role}" or "DON'T TALK TO ME, I'M RECHARGING FROM {social_event}".
 Then, provide a list of exactly ${count} unique, highly relatable values for that variable.
-You MUST return ONLY a JSON object with two keys:
+
+You must also act as the Art Director and choose the visual styling that best fits the niche.
+Available fonts: "Anton", "Bebas Neue", "Archivo Black", "Bungee", "Playfair Display", "DM Serif Display", "Abril Fatface", "Fraunces", "Space Grotesk", "Caveat", "Permanent Marker", "Shrikhand".
+Available graphics: "skull", "distress", "eagle", "lightning", "coffee", "rose", "none".
+
+You MUST return ONLY a JSON object with these exact keys:
 - "template" (string): The text template containing the {placeholder}.
-- "values" (array of strings): Exactly ${count} values for the placeholder.`
+- "values" (array of strings): Exactly ${count} values for the placeholder.
+- "design" (object) containing:
+    - "fontFamily" (string): Best matching font from the available list.
+    - "textColor" (string): Hex color code for the text.
+    - "graphicType" (string): Best matching background graphic from the available list.
+    - "graphicColor" (string): Hex color code for the graphic.
+    - "altFontEnabled" (boolean): True if you want a dual-font contrast hierarchy, False for uniform font.
+    - "align" (string): "center", "left", or "right".
+    - "transform" (string): "uppercase", "capitalize", or "none".`
                     },
                     {
                         role: 'user',

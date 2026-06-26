@@ -475,13 +475,56 @@
                 <label>Text Color</label>
                 <input type="text" id="textColorHex" value="#0A0A0A" oninput="updateLiveStyle()" style="margin-bottom: 6px">
                 <div class="color-presets">
-                    <div class="swatch" style="background:#0A0A0A" onclick="setPresetColor('#0A0A0A')"></div>
-                    <div class="swatch" style="background:#FFFFFF" onclick="setPresetColor('#FFFFFF')"></div>
-                    <div class="swatch" style="background:#F5E6D3" onclick="setPresetColor('#F5E6D3')"></div>
-                    <div class="swatch" style="background:#C5573A" onclick="setPresetColor('#C5573A')"></div>
-                    <div class="swatch" style="background:#7A8B6F" onclick="setPresetColor('#7A8B6F')"></div>
-                    <div class="swatch" style="background:#1F2D4F" onclick="setPresetColor('#1F2D4F')"></div>
-                    <div class="swatch" style="background:#D4A017" onclick="setPresetColor('#D4A017')"></div>
+                    <div class="swatch" style="background:#0A0A0A" onclick="setPresetColor('#0A0A0A', 'text')"></div>
+                    <div class="swatch" style="background:#FFFFFF" onclick="setPresetColor('#FFFFFF', 'text')"></div>
+                    <div class="swatch" style="background:#F5E6D3" onclick="setPresetColor('#F5E6D3', 'text')"></div>
+                    <div class="swatch" style="background:#C5573A" onclick="setPresetColor('#C5573A', 'text')"></div>
+                    <div class="swatch" style="background:#7A8B6F" onclick="setPresetColor('#7A8B6F', 'text')"></div>
+                    <div class="swatch" style="background:#1F2D4F" onclick="setPresetColor('#1F2D4F', 'text')"></div>
+                    <div class="swatch" style="background:#D4A017" onclick="setPresetColor('#D4A017', 'text')"></div>
+                </div>
+            </div>
+
+            <!-- New Graphic Engine -->
+            <div class="group" style="background: #FAFAFA; padding: 12px; border-radius: 4px; border: 1px dashed var(--border-color)">
+                <label style="color: var(--accent-action); font-weight:700">🎨 Graphic Injection Engine</label>
+                
+                <select id="graphicType" onchange="generateGrid()" style="margin-bottom: 12px">
+                    <option value="none">None (Typography Only)</option>
+                    <option value="skull">Urban Skull</option>
+                    <option value="distress">Vintage Distress Texture</option>
+                    <option value="eagle">Rebel Eagle</option>
+                    <option value="lightning">Lightning Bolts</option>
+                    <option value="coffee">Coffee Cup</option>
+                    <option value="rose">Streetwear Rose</option>
+                </select>
+
+                <div style="display: flex; gap: 8px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 10px;">Graphic Color</label>
+                        <input type="text" id="graphicColorHex" value="#C5573A" oninput="updateLiveStyle()">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 10px;">Opacity</label>
+                        <div class="slider-container">
+                            <input type="range" id="graphicOpacity" min="5" max="100" value="100" oninput="updateLiveStyle()">
+                        </div>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 10px;">Scale</label>
+                        <div class="slider-container">
+                            <input type="range" id="graphicScale" min="50" max="250" value="100" oninput="updateLiveStyle()">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="color-presets" style="margin-top: 4px;">
+                    <div class="swatch" style="background:#0A0A0A" onclick="setPresetColor('#0A0A0A', 'graphic')"></div>
+                    <div class="swatch" style="background:#FFFFFF" onclick="setPresetColor('#FFFFFF', 'graphic')"></div>
+                    <div class="swatch" style="background:#F5E6D3" onclick="setPresetColor('#F5E6D3', 'graphic')"></div>
+                    <div class="swatch" style="background:#C5573A" onclick="setPresetColor('#C5573A', 'graphic')"></div>
+                    <div class="swatch" style="background:#7A8B6F" onclick="setPresetColor('#7A8B6F', 'graphic')"></div>
+                    <div class="swatch" style="background:#1F2D4F" onclick="setPresetColor('#1F2D4F', 'graphic')"></div>
                 </div>
             </div>
 
@@ -590,6 +633,16 @@
             }
         };
 
+        // Graphic SVGs for Injection
+        const GRAPHIC_ELEMENTS = {
+            skull: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 C30 15, 20 30, 20 45 C20 60, 30 65, 30 70 L35 85 L65 85 L70 70 C70 65, 80 60, 80 45 C80 30, 70 15, 50 15 Z M35 45 C30 45, 28 35, 35 35 C42 35, 40 45, 35 45 Z M65 45 C60 45, 58 35, 65 35 C72 35, 70 45, 65 45 Z M50 65 C45 65, 45 55, 50 55 C55 55, 55 65, 50 65 Z"/></svg>`,
+            distress: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="2"/><circle cx="80" cy="30" r="3"/><circle cx="50" cy="80" r="2.5"/><circle cx="10" cy="70" r="1.5"/><circle cx="70" cy="10" r="2"/><circle cx="40" cy="40" r="1"/><circle cx="90" cy="70" r="2.5"/><circle cx="30" cy="90" r="3"/><circle cx="55" cy="35" r="2"/><circle cx="25" cy="65" r="1.5"/><circle cx="75" cy="55" r="2.5"/></svg>`,
+            eagle: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M50 20 L20 35 L10 50 L30 60 L50 80 L70 60 L90 50 L80 35 Z M50 20 L45 30 L55 30 Z" /></svg>`,
+            lightning: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M60 10 L30 50 L50 50 L40 90 L70 50 L50 50 Z" /></svg>`,
+            coffee: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M25 35 L75 35 L65 85 C65 90, 35 90, 35 85 Z M75 45 C85 45, 85 65, 75 65 M35 25 C45 10, 50 25, 50 10 M55 25 C65 10, 70 25, 70 10" /></svg>`,
+            rose: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M50 10 C35 15, 30 35, 40 45 C30 50, 25 65, 35 75 C45 85, 60 80, 65 70 C75 65, 80 50, 70 40 C80 30, 75 15, 60 15 C55 10, 50 10, 50 10 Z" /></svg>`
+        };
+
         let appState = {
             savedBlueprints: [],
             currentTextAlign: 'center',
@@ -672,9 +725,22 @@
                 document.getElementById('templateInput').value = data.template;
                 document.getElementById('bulkValues').value = data.values.join('\n');
                 
-                // Switch to a nice display font when AI generates
-                document.getElementById('fontFamily').value = "Archivo Black";
-                toggleAltFont(true);
+                // Autonomous AI Art Director Styling
+                if (data.design) {
+                    const d = data.design;
+                    document.getElementById('fontFamily').value = d.fontFamily || 'Bebas Neue';
+                    document.getElementById('textColorHex').value = d.textColor || '#0A0A0A';
+                    document.getElementById('graphicType').value = d.graphicType || 'none';
+                    document.getElementById('graphicColorHex').value = d.graphicColor || '#C5573A';
+                    
+                    toggleAltFont(d.altFontEnabled === true);
+                    setTextAlign(d.align || 'center');
+                    setTextTransform(d.transform || 'uppercase');
+                } else {
+                    // Fallback if older response structure
+                    document.getElementById('fontFamily').value = "Archivo Black";
+                    toggleAltFont(true);
+                }
                 
                 generateGrid();
             } catch (err) {
@@ -693,8 +759,12 @@
             updateLiveStyle();
         }
 
-        function setPresetColor(hex) {
-            document.getElementById('textColorHex').value = hex;
+        function setPresetColor(hex, type) {
+            if (type === 'text') {
+                document.getElementById('textColorHex').value = hex;
+            } else if (type === 'graphic') {
+                document.getElementById('graphicColorHex').value = hex;
+            }
             updateLiveStyle();
         }
 
@@ -736,7 +806,11 @@
                 spacing: document.getElementById('letterSpacingSlider').value,
                 transform: appState.currentTextTransform,
                 align: appState.currentTextAlign,
-                altFont: appState.altFontEnabled
+                altFont: appState.altFontEnabled,
+                graphicType: document.getElementById('graphicType').value,
+                graphicColor: document.getElementById('graphicColorHex').value,
+                graphicScale: document.getElementById('graphicScale').value,
+                graphicOpacity: document.getElementById('graphicOpacity').value
             };
 
             appState.savedBlueprints.unshift(newBlueprint);
@@ -749,7 +823,11 @@
             document.getElementById('fontFamily').value = bp.font;
             document.getElementById('textColorHex').value = bp.color;
             document.getElementById('fontSizeSlider').value = bp.size;
-            document.getElementById('letterSpacingSlider').value = bp.spacing;
+            document.getElementById('letterSpacingSlider').value = bp.spacing || 2;
+            document.getElementById('graphicType').value = bp.graphicType || 'none';
+            document.getElementById('graphicColorHex').value = bp.graphicColor || '#C5573A';
+            document.getElementById('graphicScale').value = bp.graphicScale || 100;
+            document.getElementById('graphicOpacity').value = bp.graphicOpacity || 100;
             
             toggleAltFont(bp.altFont);
             setTextAlign(bp.align);
@@ -763,6 +841,11 @@
             const size = document.getElementById('fontSizeSlider').value;
             const spacing = document.getElementById('letterSpacingSlider').value;
             const maxWidth = document.getElementById('maxWidthSlider').value;
+            
+            // Graphic Style Params
+            const gColor = document.getElementById('graphicColorHex').value;
+            const gScale = document.getElementById('graphicScale').value;
+            const gOpacity = document.getElementById('graphicOpacity').value;
 
             document.getElementById('fontSizeVal').innerText = size + 'px';
             document.getElementById('letterSpacingVal').innerText = spacing + 'px';
@@ -778,7 +861,25 @@
                 canvas.style.textTransform = appState.currentTextTransform;
                 
                 const wrapper = canvas.querySelector('.text-wrapper-box');
-                if (wrapper) wrapper.style.width = maxWidth + '%';
+                if (wrapper) {
+                    wrapper.style.width = maxWidth + '%';
+                    wrapper.style.position = 'relative';
+                    wrapper.style.zIndex = '2';
+                }
+
+                // Apply Graphic Style
+                const bgGraphic = canvas.querySelector('.bg-graphic');
+                if (bgGraphic) {
+                    bgGraphic.style.position = 'absolute';
+                    bgGraphic.style.top = '50%';
+                    bgGraphic.style.left = '50%';
+                    bgGraphic.style.transform = `translate(-50%, -50%) scale(${gScale / 100})`;
+                    bgGraphic.style.color = gColor;
+                    bgGraphic.style.opacity = gOpacity / 100;
+                    bgGraphic.style.width = '3500px';
+                    bgGraphic.style.height = '3500px';
+                    bgGraphic.style.zIndex = '1';
+                }
 
                 if (appState.altFontEnabled) {
                     canvas.classList.add('alt-font-active');
@@ -838,6 +939,15 @@
                 canvas.id = `canvas-node-${index}`;
                 canvas.style.transform = `scale(${previewCardScaleFactor})`;
 
+                // Render Background Graphic
+                const gType = document.getElementById('graphicType').value;
+                if (gType !== 'none' && GRAPHIC_ELEMENTS[gType]) {
+                    const bgGraphic = document.createElement('div');
+                    bgGraphic.className = 'bg-graphic';
+                    bgGraphic.innerHTML = GRAPHIC_ELEMENTS[gType];
+                    canvas.appendChild(bgGraphic);
+                }
+
                 const textBox = document.createElement('div');
                 textBox.className = 'text-wrapper-box';
                 textBox.innerHTML = `<div class="text-line">${item.htmlString}</div>`;
@@ -876,6 +986,15 @@
             cloneCanvas.className = 'tshirt-canvas';
             cloneCanvas.style.transform = `scale(${modalScaleFactor})`;
             
+            // Render Background Graphic for Zoom
+            const gType = document.getElementById('graphicType').value;
+            if (gType !== 'none' && GRAPHIC_ELEMENTS[gType]) {
+                const bgGraphic = document.createElement('div');
+                bgGraphic.className = 'bg-graphic';
+                bgGraphic.innerHTML = GRAPHIC_ELEMENTS[gType];
+                cloneCanvas.appendChild(bgGraphic);
+            }
+
             const textBox = document.createElement('div');
             textBox.className = 'text-wrapper-box';
             textBox.innerHTML = `<div class="text-line">${innerMarkupStr}</div>`;
