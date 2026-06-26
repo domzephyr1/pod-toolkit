@@ -412,8 +412,11 @@
             <!-- Trend Hijacker Engine Dropdown Matrix Activation Module -->
             <div class="group" style="background: #FAFAFA; padding: 12px; border-radius: 4px; border: 1px dashed var(--border-color)">
                 <label style="color: var(--accent-action); font-weight:700">⚡ Trend Hijacker Automation</label>
+                
+                <button id="aiTrendBtn" class="primary" style="margin-bottom: 12px; background: #6B46C1;" onclick="generateLiveTrend()">🤖 Auto-Generate Live Trend</button>
+                
                 <select id="hijackSelector" onchange="injectTrendVariables()">
-                    <option value="">-- Inject Pre-Verified Niche Keywords --</option>
+                    <option value="">-- Or use Pre-Verified Niche Keywords --</option>
                     <option value="runners">High-Volume: Local Run Club Satire</option>
                     <option value="corporate">High-Volume: Corporate Workplace / Gifting</option>
                     <option value="dogs">High-Volume: Breed-Specific Behavior Traits</option>
@@ -636,6 +639,37 @@
             
             generateGrid();
             selector.value = ""; // reset dropdown
+        }
+
+        async function generateLiveTrend() {
+            const btn = document.getElementById('aiTrendBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '🤖 Thinking of a trend...';
+            btn.disabled = true;
+            
+            try {
+                const res = await fetch('/api/generate-trend', { method: 'POST' });
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    throw new Error(data.error || 'Failed to fetch trend');
+                }
+                
+                document.getElementById('templateInput').value = data.template;
+                document.getElementById('bulkValues').value = data.values.join('\n');
+                
+                // Switch to a nice display font when AI generates
+                document.getElementById('fontFamily').value = "Archivo Black";
+                toggleAltFont(true);
+                
+                generateGrid();
+            } catch (err) {
+                console.error("AI Trend Error:", err);
+                alert('AI Trend Error: ' + err.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
 
         function toggleAltFont(boolVal) {

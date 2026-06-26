@@ -1,0 +1,61 @@
+export default async function handler(req, res) {
+    if (req.method !== 'POST' && req.method !== 'GET') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+        return res.status(500).json({ error: 'OPENAI_API_KEY environment variable is missing.' });
+    }
+
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o',
+                response_format: { type: 'json_object' },
+                messages: [
+                    {
+                        role: 'system',
+                        content: `You are an expert Print-on-Demand e-commerce researcher.
+Your task is to identify a highly profitable, trending niche (e.g., hobbies, careers, dog breeds, introverts).
+Generate a short text template for a t-shirt design with ONE variable placeholder, like "WORLD'S OKAYEST {role}" or "DON'T TALK TO ME, I'M RECHARGING FROM {social_event}".
+Then, provide a list of exactly 30 unique, highly relatable values for that variable.
+You MUST return ONLY a JSON object with two keys:
+- "template" (string): The text template containing the {placeholder}.
+- "values" (array of strings): Exactly 30 values for the placeholder.`
+                    },
+                    {
+                        role: 'user',
+                        content: 'Generate a new trending POD design template and 30 variations.'
+                    }
+                ]
+            })
+        });
+
+        if (!response.ok) {
+            const errData = await response.text();
+            throw new Error(`OpenAI API error: ${errData}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices[0].message.content;
+        
+        // Ensure it's valid JSON
+        const parsed = JSON.parse(content);
+        
+        if (!parsed.template || !Array.isArray(parsed.values)) {
+            throw new Error('Invalid JSON structure returned by AI.');
+        }
+
+        res.status(200).json(parsed);
+
+    } catch (error) {
+        console.error('Error generating trend:', error);
+        res.status(500).json({ error: error.message });
+    }
+}
