@@ -3,7 +3,8 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    // Fallback to OPENAI_AI_KEY just in case it was entered with a typo in Vercel
+    const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_AI_KEY;
     if (!apiKey) {
         return res.status(500).json({ error: 'OPENAI_API_KEY environment variable is missing.' });
     }
