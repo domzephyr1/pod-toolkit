@@ -528,6 +528,17 @@
                 </div>
             </div>
 
+            <!-- DALL-E 3 AI Image Studio -->
+            <div class="group" style="background: #111; color: #FFF; padding: 12px; border-radius: 4px; border: 1px solid #333;">
+                <label style="color: #4CAF50; font-weight:700">🎨 DALL-E 3 Core Graphic Generator</label>
+                <div style="font-size: 10px; color: #AAA; margin-bottom: 8px;">Describe the core centerpiece design. DALL-E will generate it, and your 30 typography variations will wrap around it.</div>
+                
+                <textarea id="dallePrompt" placeholder="A badass neon cyberpunk skull wearing sunglasses, highly detailed vector art style on a solid black background..." style="height: 60px; margin-bottom: 8px; background: #222; color: #FFF; border-color: #444; font-size: 11px;"></textarea>
+                
+                <button id="dalleBtn" class="primary" style="background: #4CAF50; color: #FFF;" onclick="generateDalleImage()">✨ Generate Master Art (Takes ~10s)</button>
+                <button class="secondary" style="background: transparent; border: 1px solid #444; color: #CCC; margin-top: 4px;" onclick="clearDalleImage()">Clear Custom Art</button>
+            </div>
+
             <div class="group">
                 <label>Canvas Text Sizing</label>
                 <div class="slider-container">
@@ -648,7 +659,8 @@
             currentTextAlign: 'center',
             currentTextTransform: 'uppercase',
             currentPreviewBg: 'transparent',
-            altFontEnabled: false
+            altFontEnabled: false,
+            dalleImageUrl: null
         };
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -750,6 +762,44 @@
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
+        }
+
+        async function generateDalleImage() {
+            const prompt = document.getElementById('dallePrompt').value;
+            if (!prompt.trim()) return alert("Please enter a description for the image.");
+            
+            const btn = document.getElementById('dalleBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✨ Generating Master Art (Please Wait)...';
+            btn.disabled = true;
+            document.getElementById('loadingHUD').style.display = 'flex';
+            document.getElementById('loaderStatusText').innerText = "DALL-E 3 is painting your masterpiece...";
+            
+            try {
+                const res = await fetch('/api/generate-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                const data = await res.json();
+                
+                if (!res.ok) throw new Error(data.error || 'Failed to generate image');
+                
+                appState.dalleImageUrl = data.url;
+                generateGrid();
+            } catch (err) {
+                console.error(err);
+                alert('DALL-E Error: ' + err.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                document.getElementById('loadingHUD').style.display = 'none';
+            }
+        }
+
+        function clearDalleImage() {
+            appState.dalleImageUrl = null;
+            generateGrid();
         }
 
         function toggleAltFont(boolVal) {
@@ -876,8 +926,22 @@
                     bgGraphic.style.transform = `translate(-50%, -50%) scale(${gScale / 100})`;
                     bgGraphic.style.color = gColor;
                     bgGraphic.style.opacity = gOpacity / 100;
-                    bgGraphic.style.width = '3500px';
-                    bgGraphic.style.height = '3500px';
+                    
+                    // If it's an image, keep natural aspect ratio bounds
+                    if (bgGraphic.querySelector('img')) {
+                        bgGraphic.style.width = '3500px';
+                        bgGraphic.style.height = 'auto';
+                        bgGraphic.style.display = 'flex';
+                        bgGraphic.style.justifyContent = 'center';
+                        const img = bgGraphic.querySelector('img');
+                        img.style.width = '100%';
+                        img.style.height = 'auto';
+                        img.style.borderRadius = '12px';
+                    } else {
+                        bgGraphic.style.width = '3500px';
+                        bgGraphic.style.height = '3500px';
+                    }
+                    
                     bgGraphic.style.zIndex = '1';
                 }
 
@@ -939,13 +1003,21 @@
                 canvas.id = `canvas-node-${index}`;
                 canvas.style.transform = `scale(${previewCardScaleFactor})`;
 
-                // Render Background Graphic
-                const gType = document.getElementById('graphicType').value;
-                if (gType !== 'none' && GRAPHIC_ELEMENTS[gType]) {
-                    const bgGraphic = document.createElement('div');
-                    bgGraphic.className = 'bg-graphic';
-                    bgGraphic.innerHTML = GRAPHIC_ELEMENTS[gType];
+                // Render Background Graphic (DALL-E or SVG)
+                const bgGraphic = document.createElement('div');
+                bgGraphic.className = 'bg-graphic';
+                
+                if (appState.dalleImageUrl) {
+                    // Inject DALL-E Image
+                    bgGraphic.innerHTML = `<img src="${appState.dalleImageUrl}" crossorigin="anonymous" />`;
                     canvas.appendChild(bgGraphic);
+                } else {
+                    // Inject SVG Graphic
+                    const gType = document.getElementById('graphicType').value;
+                    if (gType !== 'none' && GRAPHIC_ELEMENTS[gType]) {
+                        bgGraphic.innerHTML = GRAPHIC_ELEMENTS[gType];
+                        canvas.appendChild(bgGraphic);
+                    }
                 }
 
                 const textBox = document.createElement('div');
@@ -987,12 +1059,18 @@
             cloneCanvas.style.transform = `scale(${modalScaleFactor})`;
             
             // Render Background Graphic for Zoom
-            const gType = document.getElementById('graphicType').value;
-            if (gType !== 'none' && GRAPHIC_ELEMENTS[gType]) {
-                const bgGraphic = document.createElement('div');
-                bgGraphic.className = 'bg-graphic';
-                bgGraphic.innerHTML = GRAPHIC_ELEMENTS[gType];
+            const bgGraphic = document.createElement('div');
+            bgGraphic.className = 'bg-graphic';
+            
+            if (appState.dalleImageUrl) {
+                bgGraphic.innerHTML = `<img src="${appState.dalleImageUrl}" crossorigin="anonymous" />`;
                 cloneCanvas.appendChild(bgGraphic);
+            } else {
+                const gType = document.getElementById('graphicType').value;
+                if (gType !== 'none' && GRAPHIC_ELEMENTS[gType]) {
+                    bgGraphic.innerHTML = GRAPHIC_ELEMENTS[gType];
+                    cloneCanvas.appendChild(bgGraphic);
+                }
             }
 
             const textBox = document.createElement('div');
