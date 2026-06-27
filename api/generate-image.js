@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const response = await fetch('https://api.openai.com/v1/images/generations', {
+        let response = await fetch('https://api.openai.com/v1/images/generations', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -27,6 +27,27 @@ export default async function handler(req, res) {
                 size: '1024x1024'
             })
         });
+
+        // Fallback to dall-e-2 if the user's API tier doesn't support dall-e-3
+        if (response.status === 400) {
+            const errorClone = await response.clone().json();
+            if (errorClone.error && errorClone.error.message.includes('does not exist')) {
+                console.log("Falling back to dall-e-2...");
+                response = await fetch('https://api.openai.com/v1/images/generations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'dall-e-2',
+                        prompt: prompt,
+                        n: 1,
+                        size: '1024x1024'
+                    })
+                });
+            }
+        }
 
         if (!response.ok) {
             const errData = await response.text();
