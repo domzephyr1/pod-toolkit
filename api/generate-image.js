@@ -35,11 +35,18 @@ export default async function handler(req, res) {
 
         const data = await response.json();
         
-        if (!data.data || data.data.length === 0) {
-            throw new Error('No image returned from OpenAI.');
+        let imageUrl = data.data[0].url;
+        
+        // gpt-image-2 defaults to b64_json instead of url
+        if (!imageUrl && data.data[0].b64_json) {
+            imageUrl = `data:image/png;base64,${data.data[0].b64_json}`;
+        }
+        
+        if (!imageUrl) {
+            throw new Error('No image URL or base64 data returned from OpenAI.');
         }
 
-        res.status(200).json({ url: data.data[0].url });
+        res.status(200).json({ url: imageUrl });
 
     } catch (error) {
         console.error('Error generating image:', error);
