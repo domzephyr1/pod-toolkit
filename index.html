@@ -7,7 +7,7 @@
     <!-- Modern UI Sans-Serif Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Abril+Fatface&family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Bungee&family=Caveat&family=DM+Serif+Display&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Shrikhand&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Abril+Fatface&family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Bungee&family=Caveat&family=DM+Serif+Display&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Shrikhand&family=Creepster&family=Rye&family=Sedgwick+Ave+Display&family=Nosifer&display=swap" rel="stylesheet">
     
     <!-- CDNs for High-Res Canvas Export & Archiving -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -296,6 +296,21 @@
             padding: 300px;
             box-sizing: border-box;
             background: transparent !important;
+            position: relative;
+        }
+
+        .texture-active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>');
+            opacity: 0.15;
+            mix-blend-mode: multiply;
+            pointer-events: none;
+            z-index: 10;
         }
 
         /* Dynamic Layout Text Block Typography Wrapping Engine Logic */
@@ -660,7 +675,10 @@
             currentTextTransform: 'uppercase',
             currentPreviewBg: 'transparent',
             altFontEnabled: false,
-            dalleImageUrl: null
+            dalleImageUrl: null,
+            textureOverlay: false,
+            shadowStyle: 'none',
+            graphicLayout: 'center'
         };
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -756,10 +774,16 @@
                     toggleAltFont(d.altFontEnabled === true);
                     setTextAlign(d.align || 'center');
                     setTextTransform(d.transform || 'uppercase');
+                    appState.textureOverlay = d.textureOverlay || false;
+                    appState.shadowStyle = d.shadowStyle || 'none';
+                    appState.graphicLayout = d.graphicLayout || 'center';
                 } else {
                     // Fallback if older response structure
                     document.getElementById('fontFamily').value = "Archivo Black";
                     toggleAltFont(true);
+                    appState.textureOverlay = false;
+                    appState.shadowStyle = 'none';
+                    appState.graphicLayout = 'center';
                 }
                 
                 if (data.imagePrompt) {
@@ -933,25 +957,43 @@
                 const bgGraphic = canvas.querySelector('.bg-graphic');
                 if (bgGraphic) {
                     bgGraphic.style.position = 'absolute';
-                    bgGraphic.style.top = '50%';
-                    bgGraphic.style.left = '50%';
-                    bgGraphic.style.transform = `translate(-50%, -50%) scale(${gScale / 100})`;
+                    if (appState.graphicLayout === 'background') {
+                        bgGraphic.style.top = '0';
+                        bgGraphic.style.left = '0';
+                        bgGraphic.style.width = '100%';
+                        bgGraphic.style.height = '100%';
+                        bgGraphic.style.transform = `scale(${gScale / 100})`;
+                        bgGraphic.style.objectFit = 'cover';
+                    } else if (appState.graphicLayout === 'split') {
+                        bgGraphic.style.top = '20%';
+                        bgGraphic.style.left = '50%';
+                        bgGraphic.style.transform = `translate(-50%, 0) scale(${gScale / 100})`;
+                    } else {
+                        // center
+                        bgGraphic.style.top = '50%';
+                        bgGraphic.style.left = '50%';
+                        bgGraphic.style.transform = `translate(-50%, -50%) scale(${gScale / 100})`;
+                    }
                     bgGraphic.style.color = gColor;
                     bgGraphic.style.opacity = gOpacity / 100;
                     
                     // If it's an image, keep natural aspect ratio bounds
                     if (bgGraphic.querySelector('img')) {
-                        bgGraphic.style.width = '3500px';
-                        bgGraphic.style.height = 'auto';
+                        if (appState.graphicLayout !== 'background') {
+                            bgGraphic.style.width = '3500px';
+                            bgGraphic.style.height = 'auto';
+                        }
                         bgGraphic.style.display = 'flex';
                         bgGraphic.style.justifyContent = 'center';
                         const img = bgGraphic.querySelector('img');
                         img.style.width = '100%';
-                        img.style.height = 'auto';
+                        img.style.height = appState.graphicLayout === 'background' ? '100%' : 'auto';
                         img.style.borderRadius = '12px';
                     } else {
-                        bgGraphic.style.width = '3500px';
-                        bgGraphic.style.height = '3500px';
+                        if (appState.graphicLayout !== 'background') {
+                            bgGraphic.style.width = '3500px';
+                            bgGraphic.style.height = '3500px';
+                        }
                     }
                     
                     bgGraphic.style.zIndex = '1';
@@ -961,6 +1003,24 @@
                     canvas.classList.add('alt-font-active');
                 } else {
                     canvas.classList.remove('alt-font-active');
+                }
+
+                // Apply AI texture overlay and shadows
+                if (appState.textureOverlay) {
+                    canvas.classList.add('texture-active');
+                } else {
+                    canvas.classList.remove('texture-active');
+                }
+
+                if (appState.shadowStyle === 'drop-shadow') {
+                    canvas.style.textShadow = '10px 10px 20px rgba(0,0,0,0.6)';
+                    canvas.style.webkitTextStroke = '0';
+                } else if (appState.shadowStyle === 'hard-shadow') {
+                    canvas.style.textShadow = '15px 15px 0px #000000, -5px -5px 0px #000000';
+                    canvas.style.webkitTextStroke = '8px #000';
+                } else {
+                    canvas.style.textShadow = 'none';
+                    canvas.style.webkitTextStroke = '0';
                 }
             });
         }

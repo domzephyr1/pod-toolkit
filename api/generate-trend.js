@@ -12,17 +12,19 @@ export default async function handler(req, res) {
     const count = req.body && req.body.count ? parseInt(req.body.count, 10) : 30;
     const imageContext = req.body && req.body.imageContext ? req.body.imageContext : null;
 
-    let systemPrompt = `You are an expert Print-on-Demand e-commerce researcher and Art Director.
-Your task is to identify a highly profitable, trending niche (e.g., hobbies, careers, dog breeds, introverts).
-Generate a short text template for a t-shirt design with ONE variable placeholder, like "WORLD'S OKAYEST {role}" or "DON'T TALK TO ME, I'M RECHARGING FROM {social_event}".
-Then, provide a list of exactly ${count} unique, highly relatable values for that variable.`;
+    let systemPrompt = `You are a disruptive Print-on-Demand (POD) Art Director.
+Your task is to identify a HIGHLY OBSCURE, hyper-specific, yet deeply passionate niche (e.g., retro mechanical keyboard modders, underwater basket weavers, 90s tech support nostalgia). 
+CRITICAL RULE: DO NOT pick generic niches like "dogs", "coffee", "gym", "nurses", or "introverts". Pick something weird but relatable to that specific subculture.
+
+Generate a short, edgy, or highly stylized text template for a t-shirt design with ONE variable placeholder. For example: "I SURVIVED THE {tech_disaster} OF '98" or "DON'T TALK TO ME, I'M CALIBRATING MY {obscure_tool}".
+Then, provide a list of exactly ${count} unique, highly specific values for that variable.`;
 
     if (imageContext) {
         systemPrompt += `\n\nCRITICAL CONTEXT: The user is building a design around this specific imagery: "${imageContext}". You MUST ensure your chosen niche, template, and values perfectly match this visual theme.`;
     }
 
     systemPrompt += `\n\nYou must also act as the Art Director and choose the visual styling that best fits the niche.
-Available fonts: "Anton", "Bebas Neue", "Archivo Black", "Bungee", "Playfair Display", "DM Serif Display", "Abril Fatface", "Fraunces", "Space Grotesk", "Caveat", "Permanent Marker", "Shrikhand".
+Available fonts: "Anton", "Bebas Neue", "Archivo Black", "Bungee", "Playfair Display", "DM Serif Display", "Abril Fatface", "Fraunces", "Space Grotesk", "Caveat", "Permanent Marker", "Shrikhand", "Creepster", "Rye", "Sedgwick Ave Display", "Nosifer".
 Available graphics: "skull", "distress", "eagle", "lightning", "coffee", "rose", "none".
 
 You MUST return ONLY a JSON object with these exact keys:
@@ -36,7 +38,10 @@ You MUST return ONLY a JSON object with these exact keys:
     - "graphicColor" (string): Hex color code for the graphic.
     - "altFontEnabled" (boolean): True if you want a dual-font contrast hierarchy, False for uniform font.
     - "align" (string): "center", "left", or "right".
-    - "transform" (string): "uppercase", "capitalize", or "none".`;
+    - "transform" (string): "uppercase", "capitalize", or "none".
+    - "textureOverlay" (boolean): True if the design should have a vintage/grunge distress overlay.
+    - "shadowStyle" (string): "none", "drop-shadow", or "hard-shadow".
+    - "graphicLayout" (string): "center", "split", or "background".`;
 
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -47,6 +52,8 @@ You MUST return ONLY a JSON object with these exact keys:
             },
             body: JSON.stringify({
                 model: 'gpt-4o',
+                temperature: 1.1,
+                presence_penalty: 0.6,
                 response_format: { type: 'json_object' },
                 messages: [
                     {
